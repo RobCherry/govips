@@ -753,7 +753,7 @@ type cEmbedOptions struct {
 
 func (c *cEmbedOptions) Free() {
 	if c.Background != nil {
-		vipsAreaUnref(c.Background)
+		vipsArrayDoubleUnref(c.Background)
 	}
 }
 
@@ -939,7 +939,7 @@ type cAffineOptions struct {
 func (c *cAffineOptions) Free() {
 	C.g_object_unref(C.gpointer(c.Interpolate))
 	if c.OArea != nil {
-		vipsAreaUnref(c.OArea)
+		vipsArrayIntUnref(c.OArea)
 	}
 }
 
@@ -1091,7 +1091,7 @@ type cFlattenOptions struct {
 
 func (c *cFlattenOptions) Free() {
 	if c.Background != nil {
-		vipsAreaUnref(c.Background)
+		vipsArrayDoubleUnref(c.Background)
 	}
 }
 
@@ -1211,13 +1211,16 @@ func newVipsArrayDouble(slice *[]float64) *C.struct__VipsArrayDouble {
 	return C.vips_array_double_new((*C.double)(unsafe.Pointer(&s[0])), C.int(len(*slice)))
 }
 
-func vipsAreaUnref(i interface{}) {
-	switch i.(type) {
-	case *C.struct__VipsArrayDouble:
-		C.vips_area_unref((*C.struct__VipsArea)(unsafe.Pointer(i.(*C.struct__VipsArrayDouble))))
-	case *C.struct__VipsArrayInt:
-		C.vips_area_unref((*C.struct__VipsArea)(unsafe.Pointer(i.(*C.struct__VipsArrayInt))))
-	}
+func vipsArrayDoubleUnref(i *C.struct__VipsArrayDouble) {
+	vipsAreaUnref((*C.struct__VipsArea)(unsafe.Pointer(i)))
+}
+
+func vipsArrayIntUnref(i *C.struct__VipsArrayInt) {
+	vipsAreaUnref((*C.struct__VipsArea)(unsafe.Pointer(i)))
+}
+
+func vipsAreaUnref(i *C.struct__VipsArea) {
+	C.vips_area_unref(i)
 }
 
 func toGBool(b bool) C.gboolean {
