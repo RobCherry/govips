@@ -1,8 +1,11 @@
 package govips
 
 import (
+	"bytes"
 	"image"
+	"image/color"
 	_ "image/jpeg"
+	"image/png"
 	"testing"
 )
 
@@ -56,5 +59,50 @@ func Test_Crop(t *testing.T) {
 }
 
 func Test_Flatten(t *testing.T) {
-	t.Skip()
+	err := Initialize()
+	defer ThreadShutdown()
+	defer checkErrorBuffer(t)
+	checkError(t, err)
+
+	red := color.NRGBA{255, 0, 0, 255}
+	b := createTestPNG(t, image.Pt(2, 1), []color.Color{color.NRGBA{0, 0, 0, 0}, red})
+	vi, err := DecodePngBytes(b, nil)
+	checkError(t, err)
+	defer vi.Free()
+
+	runTest := func(expected color.Color, options *FlattenOptions) {
+		o, err := Flatten(vi, options)
+		checkError(t, err)
+
+		b2, err := EncodePngBytes(o, nil)
+		checkError(t, err)
+		m, _, err := image.Decode(bytes.NewBuffer(*b2))
+		checkError(t, err)
+		if expected != color.NRGBAModel.Convert(m.At(0, 0)) {
+			t.Fatalf("Invalid color: %v", m.At(0, 0))
+		}
+		if red != color.NRGBAModel.Convert(m.At(1, 0)) {
+			t.Fatalf("Invalid color: %v", m.At(1, 0))
+		}
+	}
+	runTest(color.NRGBAModel.Convert(color.Black), nil)
+	runTest(color.NRGBAModel.Convert(color.White), &FlattenOptions{Background: &[]float64{255.0}})
+	runTest(color.NRGBA{255, 0, 0, 255}, &FlattenOptions{Background: &[]float64{255, 0, 0}})
+	runTest(color.NRGBA{0, 255, 0, 255}, &FlattenOptions{Background: &[]float64{0, 255, 0}})
+	runTest(color.NRGBA{0, 0, 255, 255}, &FlattenOptions{Background: &[]float64{0, 0, 255}})
+}
+
+func createTestPNG(t testing.TB, size image.Point, pixels []color.Color) []byte {
+	if len(pixels) != size.X*size.Y {
+		t.Fatalf("Invalid pixel count: %d", len(pixels))
+	}
+	m := image.NewRGBA(image.Rect(0, 0, size.X, size.Y))
+	for x := 0; x < size.X; x++ {
+		for y := 0; y < size.Y; y++ {
+			m.Set(x, y, pixels[x+(y*size.Y)])
+		}
+	}
+	var b bytes.Buffer
+	checkError(t, png.Encode(&b, m))
+	return b.Bytes()
 }

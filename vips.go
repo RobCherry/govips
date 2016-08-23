@@ -1202,17 +1202,22 @@ func NewVSQBSVipsInterpolator() *VipsInterpolate {
 // Utilities...
 
 func newVipsArrayInt(slice *[]int) *C.struct__VipsArrayInt {
-	cInt := C.int((*slice)[0])
-	return C.vips_array_int_new(&cInt, C.int(len(*slice)))
+	s := *slice
+	return C.vips_array_int_new((*C.int)(unsafe.Pointer(&s[0])), C.int(len(*slice)))
 }
 
 func newVipsArrayDouble(slice *[]float64) *C.struct__VipsArrayDouble {
-	cDouble := C.double((*slice)[0])
-	return C.vips_array_double_new(&cDouble, C.int(len(*slice)))
+	s := *slice
+	return C.vips_array_double_new((*C.double)(unsafe.Pointer(&s[0])), C.int(len(*slice)))
 }
 
 func vipsAreaUnref(i interface{}) {
-	C.vips_area_unref((*C.struct__VipsArea)(unsafe.Pointer(i.(unsafe.Pointer))))
+	switch i.(type) {
+	case *C.struct__VipsArrayDouble:
+		C.vips_area_unref((*C.struct__VipsArea)(unsafe.Pointer(i.(*C.struct__VipsArrayDouble))))
+	case *C.struct__VipsArrayInt:
+		C.vips_area_unref((*C.struct__VipsArea)(unsafe.Pointer(i.(*C.struct__VipsArrayInt))))
+	}
 }
 
 func toGBool(b bool) C.gboolean {

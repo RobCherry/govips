@@ -49,6 +49,7 @@ cli -r 300x300 -q 90 -fast-resize -v path/to/input.jpg path/to/output.jpg
 - [ ] Tests
 - [ ] Builder
 - [ ] Documentation
+- [ ] Color Profiles
 
 ## Author
 
