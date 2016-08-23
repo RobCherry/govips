@@ -1,0 +1,13 @@
+# IDE files...
+.idea
+*.iml
+
+# Development files...
+govips
+coverage.out
+
+# Local files...
+tmp
+output.jpg
+output.png
+
