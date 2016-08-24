@@ -14,7 +14,7 @@ func Test_Embed(t *testing.T) {
 	defer ThreadShutdown()
 	defer checkErrorBuffer(t)
 	checkError(t, err)
-	vi := decodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, nil)
+	vi := test_DecodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, nil)
 	defer vi.Free()
 	width := 5000
 	height := 5000
@@ -33,7 +33,7 @@ func Test_ExtractArea(t *testing.T) {
 	defer ThreadShutdown()
 	defer checkErrorBuffer(t)
 	checkError(t, err)
-	vi := decodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, nil)
+	vi := test_DecodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, nil)
 	defer vi.Free()
 	vi2, err := ExtractArea(vi, 100, 100, 400, 300)
 	checkError(t, err)
@@ -48,7 +48,7 @@ func Test_Crop(t *testing.T) {
 	defer ThreadShutdown()
 	defer checkErrorBuffer(t)
 	checkError(t, err)
-	vi := decodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, nil)
+	vi := test_DecodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, nil)
 	defer vi.Free()
 	vi2, err := Crop(vi, 100, 100, 400, 300)
 	checkError(t, err)
@@ -86,7 +86,12 @@ func Test_Flatten(t *testing.T) {
 		}
 	}
 	runTest(color.NRGBAModel.Convert(color.Black), nil)
-	runTest(color.NRGBAModel.Convert(color.White), &FlattenOptions{Background: &[]float64{255.0}})
+	runTest(color.NRGBAModel.Convert(color.Black), &FlattenOptions{Background: &[]float64{0}})
+	runTest(color.NRGBAModel.Convert(color.Black), &FlattenOptions{Background: &[]float64{0, 0, 0}})
+	runTest(color.NRGBAModel.Convert(color.Black), &FlattenOptions{Background: VIPS_BACKGROUND_BLACK})
+	runTest(color.NRGBAModel.Convert(color.White), &FlattenOptions{Background: &[]float64{255}})
+	runTest(color.NRGBAModel.Convert(color.White), &FlattenOptions{Background: &[]float64{255, 255, 255}})
+	runTest(color.NRGBAModel.Convert(color.White), &FlattenOptions{Background: VIPS_BACKGROUND_WHITE})
 	runTest(color.NRGBA{255, 0, 0, 255}, &FlattenOptions{Background: &[]float64{255, 0, 0}})
 	runTest(color.NRGBA{0, 255, 0, 255}, &FlattenOptions{Background: &[]float64{0, 255, 0}})
 	runTest(color.NRGBA{0, 0, 255, 255}, &FlattenOptions{Background: &[]float64{0, 0, 255}})

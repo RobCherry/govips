@@ -8,6 +8,7 @@ import (
 	_ "image/png"
 	"io"
 	"os"
+	"sync/atomic"
 	"testing"
 )
 
@@ -32,48 +33,48 @@ func Test_DecodeWebpNative(t *testing.T) {
 func Test_DecodeGifVips(t *testing.T) {
 	t.Skip("GIF support using giflib/giflib5 is buggy right now...")
 	options := DecodeGifOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}}
-	decodeGifVips(t, "benchmark_images/1.gif", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
+	test_DecodeGifVips(t, "benchmark_images/1.gif", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
 }
 
 func Test_DecodeJpegVips(t *testing.T) {
 	options := DecodeJpegOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}}
-	decodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
+	test_DecodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
 }
 
 func Test_DecodeJpegVipsWithShrink(t *testing.T) {
 	options := DecodeJpegOptions{Shrink: 2, DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}}
-	decodeJpegVips(t, "benchmark_images/1.jpg", image.Rect(0, 0, BENCHMARK_IMAGE_1_BOUNDS.Dx()/2, BENCHMARK_IMAGE_1_BOUNDS.Dy()/2), &options).Free()
+	test_DecodeJpegVips(t, "benchmark_images/1.jpg", image.Rect(0, 0, BENCHMARK_IMAGE_1_BOUNDS.Dx()/2, BENCHMARK_IMAGE_1_BOUNDS.Dy()/2), &options).Free()
 }
 
 func Test_DecodePngVips(t *testing.T) {
 	options := DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}
-	decodePngVips(t, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
+	test_DecodePngVips(t, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
 }
 
 func Test_DecodeWebpVips(t *testing.T) {
 	options := DecodeWebpOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}}
-	decodeWebpVips(t, "benchmark_images/1.webp", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
+	test_DecodeWebpVips(t, "benchmark_images/1.webp", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
 }
 
 func Test_DecodeGifMagick(t *testing.T) {
 	options := DecodeMagickOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}}
-	decodeMagickVips(t, "benchmark_images/1.gif", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
+	test_DecodeMagickVips(t, "benchmark_images/1.gif", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
 }
 
 func Test_DecodeJpegMagick(t *testing.T) {
 	options := DecodeMagickOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}}
-	decodeMagickVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
+	test_DecodeMagickVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
 }
 
 func Test_DecodePngMagick(t *testing.T) {
 	options := DecodeMagickOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}}
-	decodeMagickVips(t, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
+	test_DecodeMagickVips(t, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
 }
 
 func Test_DecodeWebpMagick(t *testing.T) {
 	t.Skip("WEBP support using libmagick is buggy right now...")
 	options := DecodeMagickOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}}
-	decodeMagickVips(t, "benchmark_images/1.webp", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
+	test_DecodeMagickVips(t, "benchmark_images/1.webp", BENCHMARK_IMAGE_1_BOUNDS, &options).Free()
 }
 
 func Benchmark_DecodeGifNative(b *testing.B) {
@@ -170,6 +171,15 @@ func benchmark_DecodeVips(b *testing.B, file string, runner func(io.Reader) (*Vi
 	}
 }
 
+func test_DecodeVips(t testing.TB, file string, bounds image.Rectangle, runner func(io.Reader) (*VipsImage, error)) *VipsImage {
+	err := Initialize()
+	defer ThreadShutdown()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return decodeVips(t, file, bounds, runner)
+}
+
 func decodeVips(t testing.TB, file string, bounds image.Rectangle, runner func(io.Reader) (*VipsImage, error)) *VipsImage {
 	defer checkErrorBuffer(t)
 	imageReader, err := os.Open(file)
@@ -185,32 +195,32 @@ func decodeVips(t testing.TB, file string, bounds image.Rectangle, runner func(i
 	return vi
 }
 
-func decodeGifVips(t testing.TB, file string, bounds image.Rectangle, options *DecodeGifOptions) *VipsImage {
-	return decodeVips(t, file, bounds, func(imageReader io.Reader) (*VipsImage, error) {
+func test_DecodeGifVips(t testing.TB, file string, bounds image.Rectangle, options *DecodeGifOptions) *VipsImage {
+	return test_DecodeVips(t, file, bounds, func(imageReader io.Reader) (*VipsImage, error) {
 		return DecodeGifReader(imageReader, options)
 	})
 }
 
-func decodeJpegVips(t testing.TB, file string, bounds image.Rectangle, options *DecodeJpegOptions) *VipsImage {
-	return decodeVips(t, file, bounds, func(imageReader io.Reader) (*VipsImage, error) {
+func test_DecodeJpegVips(t testing.TB, file string, bounds image.Rectangle, options *DecodeJpegOptions) *VipsImage {
+	return test_DecodeVips(t, file, bounds, func(imageReader io.Reader) (*VipsImage, error) {
 		return DecodeJpegReader(imageReader, options)
 	})
 }
 
-func decodePngVips(t testing.TB, file string, bounds image.Rectangle, options *DecodeOptions) *VipsImage {
-	return decodeVips(t, file, bounds, func(imageReader io.Reader) (*VipsImage, error) {
+func test_DecodePngVips(t testing.TB, file string, bounds image.Rectangle, options *DecodeOptions) *VipsImage {
+	return test_DecodeVips(t, file, bounds, func(imageReader io.Reader) (*VipsImage, error) {
 		return DecodePngReader(imageReader, options)
 	})
 }
 
-func decodeWebpVips(t testing.TB, file string, bounds image.Rectangle, options *DecodeWebpOptions) *VipsImage {
-	return decodeVips(t, file, bounds, func(imageReader io.Reader) (*VipsImage, error) {
+func test_DecodeWebpVips(t testing.TB, file string, bounds image.Rectangle, options *DecodeWebpOptions) *VipsImage {
+	return test_DecodeVips(t, file, bounds, func(imageReader io.Reader) (*VipsImage, error) {
 		return DecodeWebpReader(imageReader, options)
 	})
 }
 
-func decodeMagickVips(t testing.TB, file string, bounds image.Rectangle, options *DecodeMagickOptions) *VipsImage {
-	return decodeVips(t, file, bounds, func(imageReader io.Reader) (*VipsImage, error) {
+func test_DecodeMagickVips(t testing.TB, file string, bounds image.Rectangle, options *DecodeMagickOptions) *VipsImage {
+	return test_DecodeVips(t, file, bounds, func(imageReader io.Reader) (*VipsImage, error) {
 		return DecodeMagickReader(imageReader, options)
 	})
 }
@@ -254,7 +264,9 @@ func checkError(t testing.TB, err error) {
 	if err != nil {
 		t.Error(err)
 	}
-	checkErrorBuffer(t)
+	if atomic.LoadUint32(&initialized) == 1 {
+		checkErrorBuffer(t)
+	}
 }
 
 func checkErrorBuffer(t testing.TB) {

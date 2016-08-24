@@ -44,7 +44,7 @@ func Test_EncodeGifVips(t *testing.T) {
 }
 
 func Test_EncodeJpegVips(t *testing.T) {
-	vi := decodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, nil)
+	vi := test_DecodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, nil)
 	defer vi.Free()
 	options := EncodeJpegOptions{Q: 92}
 	b, err := EncodeJpegBytes(vi, &options)
@@ -53,7 +53,7 @@ func Test_EncodeJpegVips(t *testing.T) {
 }
 
 func Test_EncodePngVips(t *testing.T) {
-	vi := decodePngVips(t, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, nil)
+	vi := test_DecodePngVips(t, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, nil)
 	defer vi.Free()
 	options := EncodePngOptions{Compression: 6} // Use: EncodePngOptions{ Compression: 4, Filter: VIPS_PNG_FILTER_UP }
 	b, err := EncodePngBytes(vi, &options)
@@ -62,7 +62,7 @@ func Test_EncodePngVips(t *testing.T) {
 }
 
 func Test_EncodeWebpVips(t *testing.T) {
-	vi := decodePngVips(t, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, nil)
+	vi := test_DecodePngVips(t, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, nil)
 	defer vi.Free()
 	options := EncodeWebpOptions{Q: 92}
 	b, err := EncodeWebpBytes(vi, &options)
@@ -113,7 +113,7 @@ func Benchmark_EncodeGifVips(b *testing.B) {
 
 func Benchmark_EncodeJpegVips(b *testing.B) {
 	benchmark_EncodeVips(b, func() *VipsImage {
-		return decodeJpegVips(b, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, nil)
+		return test_DecodeJpegVips(b, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, nil)
 	}, func(vi *VipsImage) {
 		options := EncodeJpegOptions{Q: 92}
 		buf, err := EncodeJpegBytes(vi, &options)
@@ -124,7 +124,7 @@ func Benchmark_EncodeJpegVips(b *testing.B) {
 
 func Benchmark_EncodePngVips(b *testing.B) {
 	benchmark_EncodeVips(b, func() *VipsImage {
-		return decodePngVips(b, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, nil)
+		return test_DecodePngVips(b, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, nil)
 	}, func(vi *VipsImage) {
 		options := EncodePngOptions{Compression: 6} // Use: EncodePngOptions{ Compression: 4, Filter: VIPS_PNG_FILTER_UP }
 		buf, err := EncodePngBytes(vi, &options)
@@ -135,7 +135,7 @@ func Benchmark_EncodePngVips(b *testing.B) {
 
 func Benchmark_EncodePngVipsFilterUp(b *testing.B) {
 	benchmark_EncodeVips(b, func() *VipsImage {
-		return decodePngVips(b, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, nil)
+		return test_DecodePngVips(b, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, nil)
 	}, func(vi *VipsImage) {
 		options := EncodePngOptions{Compression: 6, Filter: VIPS_PNG_FILTER_UP}
 		buf, err := EncodePngBytes(vi, &options)
@@ -146,7 +146,7 @@ func Benchmark_EncodePngVipsFilterUp(b *testing.B) {
 
 func Benchmark_EncodePngVipsCompress4FilterUp(b *testing.B) {
 	benchmark_EncodeVips(b, func() *VipsImage {
-		return decodePngVips(b, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, nil)
+		return test_DecodePngVips(b, "benchmark_images/1.png", BENCHMARK_IMAGE_1_BOUNDS, nil)
 	}, func(vi *VipsImage) {
 		options := EncodePngOptions{Compression: 4, Filter: VIPS_PNG_FILTER_UP}
 		buf, err := EncodePngBytes(vi, &options)
@@ -157,7 +157,7 @@ func Benchmark_EncodePngVipsCompress4FilterUp(b *testing.B) {
 
 func Benchmark_EncodeWebpVips(b *testing.B) {
 	benchmark_EncodeVips(b, func() *VipsImage {
-		return decodeWebpVips(b, "benchmark_images/1.webp", BENCHMARK_IMAGE_1_BOUNDS, nil)
+		return test_DecodeWebpVips(b, "benchmark_images/1.webp", BENCHMARK_IMAGE_1_BOUNDS, nil)
 	}, func(vi *VipsImage) {
 		options := EncodeWebpOptions{Q: 92}
 		buf, err := EncodeWebpBytes(vi, &options)

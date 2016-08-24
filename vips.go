@@ -21,12 +21,24 @@ const (
 	INT_ZERO    = -1
 	FLOAT_ZERO  = -1.0
 	STRING_ZERO = "GOVIPS_STRING_ZERO"
+
+	DEFAULT_CONCURRENCY      = 0
+	DEFAULT_CACHE_MAX        = 1000
+	DEFAULT_CACHE_MAX_FILES  = 100
+	DEFAULT_CACHE_MAX_MEMORY = 100 * 1024 * 1024
 )
 
 var (
-	VIPS_BACKGROUND_BLACK *[]float64 = &[]float64{}
-	VIPS_BACKGROUND_WHITE *[]float64 = &[]float64{1.0, 255.0}
+	VIPS_BACKGROUND_BLACK *[]float64 = &[]float64{0}
+	VIPS_BACKGROUND_WHITE *[]float64 = &[]float64{255}
 )
+
+type Config struct {
+	Concurrency    int
+	CacheMax       int
+	CacheMaxFiles  int
+	CacheMaxMemory int
+}
 
 var (
 	initialized uint32
@@ -42,10 +54,41 @@ func Initialize() error {
 	}
 	atomic.StoreUint32(&initialized, 1)
 
-	C.vips_concurrency_set(1)
-	C.vips_cache_set_max_mem(100 * 1048576) // 100Mb
-	C.vips_cache_set_max(500)
+	return nil
+}
 
+func InitializeWithConfig(config Config) error {
+	err := Initialize()
+	if err != nil {
+		return err
+	}
+	return Configure(config)
+}
+
+func Configure(config Config) error {
+	if atomic.LoadUint32(&initialized) == 0 {
+		return errors.New("Failed to configure libvips")
+	}
+	if config.Concurrency > 0 {
+		C.vips_concurrency_set(C.int(config.Concurrency))
+	} else {
+		C.vips_concurrency_set(C.int(DEFAULT_CONCURRENCY))
+	}
+	if config.CacheMax > 0 {
+		C.vips_cache_set_max(C.int(config.CacheMax))
+	} else {
+		C.vips_cache_set_max(C.int(DEFAULT_CACHE_MAX))
+	}
+	if config.CacheMaxFiles > 0 {
+		C.vips_cache_set_max_files(C.int(config.CacheMaxFiles))
+	} else {
+		C.vips_cache_set_max_files(C.int(DEFAULT_CACHE_MAX_FILES))
+	}
+	if config.CacheMaxMemory > 0 {
+		C.vips_cache_set_max_mem(C.size_t(config.CacheMaxMemory))
+	} else {
+		C.vips_cache_set_max_mem(C.size_t(DEFAULT_CACHE_MAX_MEMORY))
+	}
 	return nil
 }
 

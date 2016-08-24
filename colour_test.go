@@ -10,7 +10,7 @@ func Test_Colourspace(t *testing.T) {
 	defer ThreadShutdown()
 	defer checkErrorBuffer(t)
 	checkError(t, err)
-	vi := decodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, &DecodeJpegOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}})
+	vi := test_DecodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, &DecodeJpegOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}})
 	defer vi.Free()
 	if BENCHMARK_IMAGE_1_BOUNDS != vi.Bounds() {
 		t.Fatalf("Invalid bounds: %v", vi.Bounds())
@@ -41,7 +41,7 @@ func Test_ColourspaceIsSupported(t *testing.T) {
 	defer checkErrorBuffer(t)
 	checkError(t, err)
 	runTest := func(path string, expectedInterpretation VipsInterpretation, expectedBands int, expectedSupport bool) {
-		vi := decodeJpegVips(t, path, BENCHMARK_IMAGE_1_BOUNDS, &DecodeJpegOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}})
+		vi := test_DecodeJpegVips(t, path, BENCHMARK_IMAGE_1_BOUNDS, &DecodeJpegOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}})
 		defer vi.Free()
 		if BENCHMARK_IMAGE_1_BOUNDS != vi.Bounds() {
 			t.Fatalf("Invalid bounds for %s: %v", path, vi.Bounds())
