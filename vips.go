@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
+	"image/color"
 	"io"
 	"io/ioutil"
 	"sync/atomic"
@@ -1240,6 +1241,154 @@ func NewNohaloVipsInterpolator() *VipsInterpolate {
 func NewVSQBSVipsInterpolator() *VipsInterpolate {
 	result, _ := NewVipsInterpolator("vsqbs")
 	return result
+}
+
+// Helpers...
+
+func newVipsRegion(i *VipsImage, bounds image.Rectangle) *C.VipsRegion {
+	vipsRegion := C.vips_region_new(i.cVipsImage)
+	rect := C.govips_rect_new(C.int(bounds.Min.X), C.int(bounds.Min.Y), C.int(bounds.Dx()), C.int(bounds.Dy()))
+	C.vips_region_prepare(vipsRegion, &rect)
+	return vipsRegion
+}
+
+type NRGBAVipsImage struct {
+	*VipsImage
+	cVipsRegion *C.VipsRegion
+	alphaBand   bool
+}
+
+func (v *NRGBAVipsImage) ColorModel() color.Model {
+	return color.NRGBAModel
+}
+
+func (v *NRGBAVipsImage) At(x, y int) color.Color {
+	if v.cVipsRegion == nil {
+		v.cVipsRegion = newVipsRegion(v.VipsImage, v.Bounds())
+		v.alphaBand = C.govips_vips_region_n_elements(v.cVipsRegion) == 4
+	}
+	vipsPel := C.govips_region_addr(v.cVipsRegion, C.int(x), C.int(y))
+	red := uint8(*vipsPel)
+	green := uint8(*C.govips_pel_band(vipsPel, 1))
+	blue := uint8(*C.govips_pel_band(vipsPel, 2))
+	alpha := uint8(255)
+	if v.alphaBand {
+		alpha = uint8(*C.govips_pel_band(vipsPel, 3))
+	}
+	return &color.NRGBA{red, green, blue, alpha}
+}
+
+func (v *NRGBAVipsImage) Free() {
+	if v.cVipsRegion != nil {
+		C.g_object_unref(C.gpointer(v.cVipsRegion))
+		v.cVipsRegion = nil
+	}
+	v.VipsImage.Free()
+}
+
+func NewNRGBAVipsImage(vi *VipsImage) (*NRGBAVipsImage, error) {
+	bands := vi.Bands()
+	if !(bands == 3 || bands == 4) {
+		return nil, fmt.Errorf("Invalid number of bands: %d", bands)
+	}
+	format := C.vips_image_get_format(vi.cVipsImage)
+	if C.vips_image_get_format(vi.cVipsImage) != C.VIPS_FORMAT_UCHAR {
+		return nil, fmt.Errorf("Invalid band format: %v", format)
+	}
+	if vi.Interpretation() != VIPS_INTERPRETATION_sRGB {
+		return nil, fmt.Errorf("Invalid interpretation: %v", vi.Interpretation())
+	}
+	return &NRGBAVipsImage{
+		VipsImage: vi,
+	}, nil
+}
+
+type CMYKVipsImage struct {
+	*VipsImage
+	cVipsRegion *C.VipsRegion
+}
+
+func (v *CMYKVipsImage) ColorModel() color.Model {
+	return color.CMYKModel
+}
+
+func (v *CMYKVipsImage) At(x, y int) color.Color {
+	if v.cVipsRegion == nil {
+		v.cVipsRegion = newVipsRegion(v.VipsImage, v.Bounds())
+	}
+	vipsPel := C.govips_region_addr(v.cVipsRegion, C.int(x), C.int(y))
+	cyan := uint8(*vipsPel)
+	magenta := uint8(*C.govips_pel_band(vipsPel, 1))
+	yellow := uint8(*C.govips_pel_band(vipsPel, 2))
+	black := uint8(*C.govips_pel_band(vipsPel, 3))
+	return &color.CMYK{cyan, magenta, yellow, black}
+}
+
+func (v *CMYKVipsImage) Free() {
+	if v.cVipsRegion != nil {
+		C.g_object_unref(C.gpointer(v.cVipsRegion))
+		v.cVipsRegion = nil
+	}
+	v.VipsImage.Free()
+}
+
+func NewCMYKVipsImage(vi *VipsImage) (*CMYKVipsImage, error) {
+	bands := vi.Bands()
+	if bands != 4 {
+		return nil, fmt.Errorf("Invalid number of bands: %d", bands)
+	}
+	format := C.vips_image_get_format(vi.cVipsImage)
+	if C.vips_image_get_format(vi.cVipsImage) != C.VIPS_FORMAT_UCHAR {
+		return nil, fmt.Errorf("Invalid band format: %v", format)
+	}
+	if vi.Interpretation() != VIPS_INTERPRETATION_CMYK {
+		return nil, fmt.Errorf("Invalid interpretation: %v", vi.Interpretation())
+	}
+	return &CMYKVipsImage{
+		VipsImage: vi,
+	}, nil
+}
+
+type GrayVipsImage struct {
+	*VipsImage
+	cVipsRegion *C.VipsRegion
+}
+
+func (v *GrayVipsImage) ColorModel() color.Model {
+	return color.GrayModel
+}
+
+func (v *GrayVipsImage) At(x, y int) color.Color {
+	if v.cVipsRegion == nil {
+		v.cVipsRegion = newVipsRegion(v.VipsImage, v.Bounds())
+	}
+	vipsPel := C.govips_region_addr(v.cVipsRegion, C.int(x), C.int(y))
+	return &color.Gray{uint8(*vipsPel)}
+}
+
+func (v *GrayVipsImage) Free() {
+	if v.cVipsRegion != nil {
+		C.g_object_unref(C.gpointer(v.cVipsRegion))
+		v.cVipsRegion = nil
+	}
+	v.VipsImage.Free()
+}
+
+func NewGrayVipsImage(vi *VipsImage) (*GrayVipsImage, error) {
+	bands := vi.Bands()
+	if bands != 1 {
+		return nil, fmt.Errorf("Invalid number of bands: %d", bands)
+	}
+	format := C.vips_image_get_format(vi.cVipsImage)
+	if C.vips_image_get_format(vi.cVipsImage) != C.VIPS_FORMAT_UCHAR {
+		return nil, fmt.Errorf("Invalid band format: %v", format)
+	}
+	if vi.Interpretation() != VIPS_INTERPRETATION_B_W {
+		return nil, fmt.Errorf("Invalid interpretation: %v", vi.Interpretation())
+	}
+	return &GrayVipsImage{
+		VipsImage: vi,
+	}, nil
 }
 
 // Utilities...

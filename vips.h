@@ -148,3 +148,20 @@ int govips_flatten(VipsImage *in, VipsImage **out, VipsArrayDouble *background, 
 int govips_colourspace(VipsImage *in, VipsImage **out, VipsInterpretation space, VipsInterpretation source_space) {
   return vips_colourspace(in, out, space, "source_space", source_space, NULL);
 }
+
+VipsRect govips_rect_new(int left, int top, int width, int height) {
+  VipsRect r = { .left = left, .top = top, .width = width, .height = height };
+  return r;
+}
+
+VipsPel* govips_region_addr(VipsRegion *r, int x, int y) {
+  return VIPS_REGION_ADDR(r, x, y);
+}
+
+int govips_vips_region_n_elements(VipsRegion *r) {
+  return VIPS_REGION_N_ELEMENTS(r);
+}
+
+VipsPel* govips_pel_band(VipsPel *p, int n) {
+  return p + n;
+}
