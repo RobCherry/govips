@@ -640,7 +640,7 @@ func EncodeJpegWriter(w io.Writer, i *VipsImage, options *EncodeJpegOptions) (in
 	if err != nil {
 		return 0, err
 	}
-	return w.Write(*bytes)
+	return w.Write(bytes)
 }
 
 func EncodeJpegBytes(i *VipsImage, options *EncodeJpegOptions) ([]byte, error) {
@@ -704,7 +704,7 @@ func EncodePngWriter(w io.Writer, i *VipsImage, options *EncodePngOptions) (int,
 	if err != nil {
 		return 0, err
 	}
-	return w.Write(*bytes)
+	return w.Write(bytes)
 }
 
 func EncodePngBytes(i *VipsImage, options *EncodePngOptions) ([]byte, error) {
@@ -753,7 +753,7 @@ func EncodeWebpWriter(w io.Writer, i *VipsImage, options *EncodeWebpOptions) (in
 	if err != nil {
 		return 0, err
 	}
-	return w.Write(*bytes)
+	return w.Write(bytes)
 }
 
 func EncodeWebpBytes(i *VipsImage, options *EncodeWebpOptions) ([]byte, error) {

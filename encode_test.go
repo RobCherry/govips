@@ -49,7 +49,7 @@ func Test_EncodeJpegVips(t *testing.T) {
 	options := EncodeJpegOptions{Q: 92}
 	b, err := EncodeJpegBytes(vi, &options)
 	checkError(t, err)
-	checkEncoded(t, bytes.NewReader(*b), "jpeg", BENCHMARK_IMAGE_1_BOUNDS.Size())
+	checkEncoded(t, bytes.NewReader(b), "jpeg", BENCHMARK_IMAGE_1_BOUNDS.Size())
 }
 
 func Test_EncodePngVips(t *testing.T) {
@@ -58,7 +58,7 @@ func Test_EncodePngVips(t *testing.T) {
 	options := EncodePngOptions{Compression: 6} // Use: EncodePngOptions{ Compression: 4, Filter: VIPS_PNG_FILTER_UP }
 	b, err := EncodePngBytes(vi, &options)
 	checkError(t, err)
-	checkEncoded(t, bytes.NewReader(*b), "png", BENCHMARK_IMAGE_1_BOUNDS.Size())
+	checkEncoded(t, bytes.NewReader(b), "png", BENCHMARK_IMAGE_1_BOUNDS.Size())
 }
 
 func Test_EncodeWebpVips(t *testing.T) {
@@ -67,7 +67,7 @@ func Test_EncodeWebpVips(t *testing.T) {
 	options := EncodeWebpOptions{Q: 92}
 	b, err := EncodeWebpBytes(vi, &options)
 	checkError(t, err)
-	checkEncoded(t, bytes.NewReader(*b), "webp", BENCHMARK_IMAGE_1_BOUNDS.Size())
+	checkEncoded(t, bytes.NewReader(b), "webp", BENCHMARK_IMAGE_1_BOUNDS.Size())
 }
 
 func Benchmark_EncodeGifNative(b *testing.B) {
@@ -118,7 +118,7 @@ func Benchmark_EncodeJpegVips(b *testing.B) {
 		options := EncodeJpegOptions{Q: 92}
 		buf, err := EncodeJpegBytes(vi, &options)
 		checkError(b, err)
-		checkEncoded(b, bytes.NewReader(*buf), "jpeg", BENCHMARK_IMAGE_1_BOUNDS.Size())
+		checkEncoded(b, bytes.NewReader(buf), "jpeg", BENCHMARK_IMAGE_1_BOUNDS.Size())
 	})
 }
 
@@ -129,7 +129,7 @@ func Benchmark_EncodePngVips(b *testing.B) {
 		options := EncodePngOptions{Compression: 6} // Use: EncodePngOptions{ Compression: 4, Filter: VIPS_PNG_FILTER_UP }
 		buf, err := EncodePngBytes(vi, &options)
 		checkError(b, err)
-		checkEncoded(b, bytes.NewReader(*buf), "png", BENCHMARK_IMAGE_1_BOUNDS.Size())
+		checkEncoded(b, bytes.NewReader(buf), "png", BENCHMARK_IMAGE_1_BOUNDS.Size())
 	})
 }
 
@@ -140,7 +140,7 @@ func Benchmark_EncodePngVipsFilterUp(b *testing.B) {
 		options := EncodePngOptions{Compression: 6, Filter: VIPS_PNG_FILTER_UP}
 		buf, err := EncodePngBytes(vi, &options)
 		checkError(b, err)
-		checkEncoded(b, bytes.NewReader(*buf), "png", BENCHMARK_IMAGE_1_BOUNDS.Size())
+		checkEncoded(b, bytes.NewReader(buf), "png", BENCHMARK_IMAGE_1_BOUNDS.Size())
 	})
 }
 
@@ -151,7 +151,7 @@ func Benchmark_EncodePngVipsCompress4FilterUp(b *testing.B) {
 		options := EncodePngOptions{Compression: 4, Filter: VIPS_PNG_FILTER_UP}
 		buf, err := EncodePngBytes(vi, &options)
 		checkError(b, err)
-		checkEncoded(b, bytes.NewReader(*buf), "png", BENCHMARK_IMAGE_1_BOUNDS.Size())
+		checkEncoded(b, bytes.NewReader(buf), "png", BENCHMARK_IMAGE_1_BOUNDS.Size())
 	})
 }
 
@@ -162,7 +162,7 @@ func Benchmark_EncodeWebpVips(b *testing.B) {
 		options := EncodeWebpOptions{Q: 92}
 		buf, err := EncodeWebpBytes(vi, &options)
 		checkError(b, err)
-		checkEncoded(b, bytes.NewReader(*buf), "webp", BENCHMARK_IMAGE_1_BOUNDS.Size())
+		checkEncoded(b, bytes.NewReader(buf), "webp", BENCHMARK_IMAGE_1_BOUNDS.Size())
 	})
 }
 
