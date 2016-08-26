@@ -643,7 +643,7 @@ func EncodeJpegWriter(w io.Writer, i *VipsImage, options *EncodeJpegOptions) (in
 	return w.Write(*bytes)
 }
 
-func EncodeJpegBytes(i *VipsImage, options *EncodeJpegOptions) (*[]byte, error) {
+func EncodeJpegBytes(i *VipsImage, options *EncodeJpegOptions) ([]byte, error) {
 	if options == nil {
 		options = &EncodeJpegOptions{}
 	}
@@ -656,7 +656,7 @@ func EncodeJpegBytes(i *VipsImage, options *EncodeJpegOptions) (*[]byte, error) 
 	}
 	defer C.g_free(C.gpointer(obuf))
 	bytes := C.GoBytes(obuf, C.int(olen))
-	return &bytes, nil
+	return bytes, nil
 }
 
 type EncodePngOptions struct {
@@ -707,7 +707,7 @@ func EncodePngWriter(w io.Writer, i *VipsImage, options *EncodePngOptions) (int,
 	return w.Write(*bytes)
 }
 
-func EncodePngBytes(i *VipsImage, options *EncodePngOptions) (*[]byte, error) {
+func EncodePngBytes(i *VipsImage, options *EncodePngOptions) ([]byte, error) {
 	if options == nil {
 		options = &EncodePngOptions{}
 	}
@@ -720,7 +720,7 @@ func EncodePngBytes(i *VipsImage, options *EncodePngOptions) (*[]byte, error) {
 	}
 	defer C.g_free(C.gpointer(obuf))
 	bytes := C.GoBytes(obuf, C.int(olen))
-	return &bytes, nil
+	return bytes, nil
 }
 
 type EncodeWebpOptions struct {
@@ -756,7 +756,7 @@ func EncodeWebpWriter(w io.Writer, i *VipsImage, options *EncodeWebpOptions) (in
 	return w.Write(*bytes)
 }
 
-func EncodeWebpBytes(i *VipsImage, options *EncodeWebpOptions) (*[]byte, error) {
+func EncodeWebpBytes(i *VipsImage, options *EncodeWebpOptions) ([]byte, error) {
 	if options == nil {
 		options = &EncodeWebpOptions{}
 	}
@@ -769,7 +769,7 @@ func EncodeWebpBytes(i *VipsImage, options *EncodeWebpOptions) (*[]byte, error) 
 	}
 	defer C.g_free(C.gpointer(obuf))
 	bytes := C.GoBytes(obuf, C.int(olen))
-	return &bytes, nil
+	return bytes, nil
 }
 
 // Operations
