@@ -30,6 +30,25 @@ const (
 )
 
 var (
+	ErrInitialize = errors.New("Failed to initialize libvips")
+	ErrConfigure = errors.New("Failed to configure libvips")
+
+	ErrLoad = errors.New("Failed to load image")
+	ErrSave = errors.New("Failed to save image")
+
+	ErrEmbed = errors.New("Failed to embed image")
+	ErrCrop = errors.New("Failed to crop image")
+	ErrShrink = errors.New("Failed to shrink image")
+	ErrReduce = errors.New("Failed to reduce image")
+	ErrResize = errors.New("Failed to resize image")
+	ErrAffine = errors.New("Failed to affine image")
+	ErrBlur = errors.New("Failed to blur image")
+	ErrSharpen = errors.New("Failed to sharpen image")
+	ErrFlatten = errors.New("Failed to flatten image")
+	ErrColourspace = errors.New("Failed to convert colourspace of image")
+)
+
+var (
 	VIPS_BACKGROUND_BLACK *[]float64 = &[]float64{0}
 	VIPS_BACKGROUND_WHITE *[]float64 = &[]float64{255}
 )
@@ -51,7 +70,7 @@ func Initialize() error {
 	}
 	if err := C.vips_init(C.CString("govips")); err != 0 {
 		C.vips_shutdown()
-		return errors.New("Failed to initialize libvips")
+		return ErrInitialize
 	}
 	atomic.StoreUint32(&initialized, 1)
 
@@ -68,7 +87,7 @@ func InitializeWithConfig(config Config) error {
 
 func Configure(config Config) error {
 	if atomic.LoadUint32(&initialized) == 0 {
-		return errors.New("Failed to configure libvips")
+		return ErrConfigure
 	}
 	if config.Concurrency > 0 {
 		C.vips_concurrency_set(C.int(config.Concurrency))
@@ -487,7 +506,7 @@ func DecodeGifBytes(b []byte, options *DecodeGifOptions) (*VipsImage, error) {
 	defer cOptions.Free()
 	var i *C.struct__VipsImage
 	if C.govips_gifload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.Page, cOptions.Access, cOptions.Disc) != 0 {
-		return nil, errors.New("Failed to load image")
+		return nil, ErrLoad
 	}
 	return newVipsImage(i), nil
 }
@@ -508,7 +527,7 @@ func DecodeJpegBytes(b []byte, options *DecodeJpegOptions) (*VipsImage, error) {
 	defer cOptions.Free()
 	var i *C.struct__VipsImage
 	if C.govips_jpegload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.Shrink, cOptions.Fail, cOptions.Autorotate, cOptions.Access, cOptions.Disc) != 0 {
-		return nil, errors.New("Failed to load image")
+		return nil, ErrLoad
 	}
 	return newVipsImage(i), nil
 }
@@ -529,7 +548,7 @@ func DecodeMagickBytes(b []byte, options *DecodeMagickOptions) (*VipsImage, erro
 	defer cOptions.Free()
 	var i *C.struct__VipsImage
 	if C.govips_magickload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.AllFrames, cOptions.Density, cOptions.Page, cOptions.Access, cOptions.Disc) != 0 {
-		return nil, errors.New("Failed to load image")
+		return nil, ErrLoad
 	}
 	return newVipsImage(i), nil
 }
@@ -549,7 +568,7 @@ func DecodePngBytes(b []byte, options *DecodeOptions) (*VipsImage, error) {
 	cOptions := options.toC()
 	var i *C.struct__VipsImage
 	if C.govips_pngload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.Access, cOptions.Disc) != 0 {
-		return nil, errors.New("Failed to load image")
+		return nil, ErrLoad
 	}
 	return newVipsImage(i), nil
 }
@@ -570,7 +589,7 @@ func DecodeWebpBytes(b []byte, options *DecodeWebpOptions) (*VipsImage, error) {
 	defer cOptions.Free()
 	var i *C.struct__VipsImage
 	if C.govips_webpload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.Shrink, cOptions.Access, cOptions.Disc) != 0 {
-		return nil, errors.New("Failed to load image")
+		return nil, ErrLoad
 	}
 	return newVipsImage(i), nil
 }
@@ -652,7 +671,7 @@ func EncodeJpegBytes(i *VipsImage, options *EncodeJpegOptions) ([]byte, error) {
 	var obuf unsafe.Pointer
 	olen := C.size_t(0)
 	if C.govips_jpegsave_buffer(i.cVipsImage, &obuf, &olen, cOptions.Q, cOptions.Profile, cOptions.OptimizeCoding, cOptions.Interlace, cOptions.Strip, cOptions.NoSubsample, cOptions.TrellisQuantization, cOptions.OvershootDeringing, cOptions.OptimizeScans) != 0 {
-		return nil, errors.New("Failed to save image")
+		return nil, ErrSave
 	}
 	defer C.g_free(C.gpointer(obuf))
 	bytes := C.GoBytes(obuf, C.int(olen))
@@ -716,7 +735,7 @@ func EncodePngBytes(i *VipsImage, options *EncodePngOptions) ([]byte, error) {
 	var obuf unsafe.Pointer
 	olen := C.size_t(0)
 	if C.govips_pngsave_buffer(i.cVipsImage, &obuf, &olen, cOptions.Compression, cOptions.Interlace, cOptions.Profile, cOptions.Filter) != 0 {
-		return nil, errors.New("Failed to save image")
+		return nil, ErrSave
 	}
 	defer C.g_free(C.gpointer(obuf))
 	bytes := C.GoBytes(obuf, C.int(olen))
@@ -765,7 +784,7 @@ func EncodeWebpBytes(i *VipsImage, options *EncodeWebpOptions) ([]byte, error) {
 	var obuf unsafe.Pointer
 	olen := C.size_t(0)
 	if C.govips_webpsave_buffer(i.cVipsImage, &obuf, &olen, cOptions.Q, cOptions.Lossless) != 0 {
-		return nil, errors.New("Failed to save image")
+		return nil, ErrSave
 	}
 	defer C.g_free(C.gpointer(obuf))
 	bytes := C.GoBytes(obuf, C.int(olen))
@@ -809,7 +828,7 @@ func Embed(v *VipsImage, x, y, width, height int, options *EmbedOptions) (*VipsI
 	defer cOptions.Free()
 	var i *C.struct__VipsImage
 	if C.govips_embed(v.cVipsImage, &i, C.int(x), C.int(y), C.int(width), C.int(height), cOptions.Extend, cOptions.Background) != 0 {
-		return nil, errors.New("Failed to embed image")
+		return nil, ErrEmbed
 	}
 	return newVipsImage(i), nil
 }
@@ -817,7 +836,7 @@ func Embed(v *VipsImage, x, y, width, height int, options *EmbedOptions) (*VipsI
 func ExtractArea(v *VipsImage, left, top, width, height int) (*VipsImage, error) {
 	var i *C.struct__VipsImage
 	if C.govips_extract_area(v.cVipsImage, &i, C.int(left), C.int(top), C.int(width), C.int(height)) != 0 {
-		return nil, errors.New("Failed to crop image")
+		return nil, ErrCrop
 	}
 	return newVipsImage(i), nil
 }
@@ -829,7 +848,7 @@ func Crop(v *VipsImage, left, top, width, height int) (*VipsImage, error) {
 func Shrink(v *VipsImage, xshrink, yshrink float64) (*VipsImage, error) {
 	var i *C.struct__VipsImage
 	if C.govips_shrink(v.cVipsImage, &i, C.double(xshrink), C.double(yshrink)) != 0 {
-		return nil, errors.New("Failed to shrink image")
+		return nil, ErrShrink
 	}
 	return newVipsImage(i), nil
 }
@@ -837,7 +856,7 @@ func Shrink(v *VipsImage, xshrink, yshrink float64) (*VipsImage, error) {
 func ShrinkH(v *VipsImage, xshrink float64) (*VipsImage, error) {
 	var i *C.struct__VipsImage
 	if C.govips_shrinkh(v.cVipsImage, &i, C.double(xshrink)) != 0 {
-		return nil, errors.New("Failed to shrink image")
+		return nil, ErrShrink
 	}
 	return newVipsImage(i), nil
 }
@@ -845,7 +864,7 @@ func ShrinkH(v *VipsImage, xshrink float64) (*VipsImage, error) {
 func ShrinkV(v *VipsImage, yshrink float64) (*VipsImage, error) {
 	var i *C.struct__VipsImage
 	if C.govips_shrinkv(v.cVipsImage, &i, C.double(yshrink)) != 0 {
-		return nil, errors.New("Failed to shrink image")
+		return nil, ErrShrink
 	}
 	return newVipsImage(i), nil
 }
@@ -853,7 +872,7 @@ func ShrinkV(v *VipsImage, yshrink float64) (*VipsImage, error) {
 func Reduce(v *VipsImage, xshrink, yshrink float64, kernel VipsKernel) (*VipsImage, error) {
 	var i *C.struct__VipsImage
 	if C.govips_reduce(v.cVipsImage, &i, C.double(xshrink), C.double(yshrink), C.VipsKernel(kernel)) != 0 {
-		return nil, errors.New("Failed to reduce image")
+		return nil, ErrReduce
 	}
 	return newVipsImage(i), nil
 }
@@ -861,7 +880,7 @@ func Reduce(v *VipsImage, xshrink, yshrink float64, kernel VipsKernel) (*VipsIma
 func ReduceH(v *VipsImage, xshrink float64, kernel VipsKernel) (*VipsImage, error) {
 	var i *C.struct__VipsImage
 	if C.govips_reduceh(v.cVipsImage, &i, C.double(xshrink), C.VipsKernel(kernel)) != 0 {
-		return nil, errors.New("Failed to reduce image")
+		return nil, ErrReduce
 	}
 	return newVipsImage(i), nil
 }
@@ -869,7 +888,7 @@ func ReduceH(v *VipsImage, xshrink float64, kernel VipsKernel) (*VipsImage, erro
 func ReduceV(v *VipsImage, yshrink float64, kernel VipsKernel) (*VipsImage, error) {
 	var i *C.struct__VipsImage
 	if C.govips_reducev(v.cVipsImage, &i, C.double(yshrink), C.VipsKernel(kernel)) != 0 {
-		return nil, errors.New("Failed to reduce image")
+		return nil, ErrReduce
 	}
 	return newVipsImage(i), nil
 }
@@ -877,7 +896,7 @@ func ReduceV(v *VipsImage, yshrink float64, kernel VipsKernel) (*VipsImage, erro
 func Resize(v *VipsImage, scale, vscale float64, kernel VipsKernel) (*VipsImage, error) {
 	var i *C.struct__VipsImage
 	if C.govips_resize(v.cVipsImage, &i, C.double(scale), C.double(vscale), C.VipsKernel(kernel)) != 0 {
-		return nil, errors.New("Failed to resize image")
+		return nil, ErrResize
 	}
 	return newVipsImage(i), nil
 }
@@ -938,7 +957,7 @@ func Similarity(v *VipsImage, options *SimilarityOptions) (*VipsImage, error) {
 	defer cOptions.Free()
 	var i *C.struct__VipsImage
 	if C.govips_similarity(v.cVipsImage, &i, cOptions.Scale, cOptions.Angle, cOptions.Interpolate, cOptions.Idx, cOptions.Idy, cOptions.Odx, cOptions.Ody) != 0 {
-		return nil, errors.New("Failed to affine image")
+		return nil, ErrAffine
 	}
 	return newVipsImage(i), nil
 }
@@ -995,7 +1014,7 @@ func Affine(v *VipsImage, a, b, c, d float64, options *AffineOptions) (*VipsImag
 	defer cOptions.Free()
 	var i *C.struct__VipsImage
 	if C.govips_affine(v.cVipsImage, &i, C.double(a), C.double(b), C.double(c), C.double(d), cOptions.Interpolate, cOptions.OArea, cOptions.Idx, cOptions.Idy, cOptions.Odx, cOptions.Ody) != 0 {
-		return nil, errors.New("Failed to affine image")
+		return nil, ErrAffine
 	}
 	return newVipsImage(i), nil
 }
@@ -1031,7 +1050,7 @@ func Blur(v *VipsImage, sigma float64, options *BlurOptions) (*VipsImage, error)
 	defer cOptions.Free()
 	var i *C.struct__VipsImage
 	if C.govips_gaussblur(v.cVipsImage, &i, C.double(sigma), cOptions.Precision, cOptions.MinimumAmplitude) != 0 {
-		return nil, errors.New("Failed to blur image")
+		return nil, ErrBlur
 	}
 	return newVipsImage(i), nil
 }
@@ -1102,7 +1121,7 @@ func Sharpen(v *VipsImage, options *SharpenOptions) (*VipsImage, error) {
 	defer cOptions.Free()
 	var i *C.struct__VipsImage
 	if C.govips_sharpen(v.cVipsImage, &i, cOptions.Sigma, cOptions.X1, cOptions.Y2, cOptions.Y3, cOptions.M1, cOptions.M2) != 0 {
-		return nil, errors.New("Failed to sharpen image")
+		return nil, ErrSharpen
 	}
 	return newVipsImage(i), nil
 }
@@ -1147,7 +1166,7 @@ func Flatten(v *VipsImage, options *FlattenOptions) (*VipsImage, error) {
 	defer cOptions.Free()
 	var i *C.struct__VipsImage
 	if C.govips_flatten(v.cVipsImage, &i, cOptions.Background, cOptions.MaxAlpha) != 0 {
-		return nil, errors.New("Failed to flatten image")
+		return nil, ErrFlatten
 	}
 	return newVipsImage(i), nil
 }
@@ -1179,7 +1198,7 @@ func Colourspace(v *VipsImage, space VipsInterpretation, options *ColourspaceOpt
 	defer cOptions.Free()
 	var i *C.struct__VipsImage
 	if C.govips_colourspace(v.cVipsImage, &i, space.toC(), cOptions.SourceSpace) != 0 {
-		return nil, errors.New("Failed to convert colourspace of image")
+		return nil, ErrColourspace
 	}
 	return newVipsImage(i), nil
 }
