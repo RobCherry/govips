@@ -31,20 +31,20 @@ const (
 
 var (
 	ErrInitialize = errors.New("Failed to initialize libvips")
-	ErrConfigure = errors.New("Failed to configure libvips")
+	ErrConfigure  = errors.New("Failed to configure libvips")
 
 	ErrLoad = errors.New("Failed to load image")
 	ErrSave = errors.New("Failed to save image")
 
-	ErrEmbed = errors.New("Failed to embed image")
-	ErrCrop = errors.New("Failed to crop image")
-	ErrShrink = errors.New("Failed to shrink image")
-	ErrReduce = errors.New("Failed to reduce image")
-	ErrResize = errors.New("Failed to resize image")
-	ErrAffine = errors.New("Failed to affine image")
-	ErrBlur = errors.New("Failed to blur image")
-	ErrSharpen = errors.New("Failed to sharpen image")
-	ErrFlatten = errors.New("Failed to flatten image")
+	ErrEmbed       = errors.New("Failed to embed image")
+	ErrCrop        = errors.New("Failed to crop image")
+	ErrShrink      = errors.New("Failed to shrink image")
+	ErrReduce      = errors.New("Failed to reduce image")
+	ErrResize      = errors.New("Failed to resize image")
+	ErrAffine      = errors.New("Failed to affine image")
+	ErrBlur        = errors.New("Failed to blur image")
+	ErrSharpen     = errors.New("Failed to sharpen image")
+	ErrFlatten     = errors.New("Failed to flatten image")
 	ErrColourspace = errors.New("Failed to convert colourspace of image")
 )
 
@@ -125,6 +125,8 @@ func ThreadShutdown() {
 }
 
 func ErrorBuffer() error {
+	C.vips_error_freeze()
+	defer C.vips_error_thaw()
 	errorBuffer := C.GoString(C.vips_error_buffer())
 	if len(errorBuffer) == 0 {
 		return nil
