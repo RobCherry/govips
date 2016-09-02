@@ -49,8 +49,8 @@ var (
 )
 
 var (
-	VIPS_BACKGROUND_BLACK *[]float64 = &[]float64{0}
-	VIPS_BACKGROUND_WHITE *[]float64 = &[]float64{255}
+	VIPS_BACKGROUND_BLACK = []float64{0}
+	VIPS_BACKGROUND_WHITE = []float64{255}
 )
 
 type Config struct {
@@ -319,6 +319,7 @@ const (
 
 type VipsImage struct {
 	cVipsImage *C.struct__VipsImage
+	goBytes    []byte
 }
 
 func (v *VipsImage) Bounds() image.Rectangle {
@@ -347,10 +348,17 @@ func (v *VipsImage) Free() {
 		C.g_object_unref(C.gpointer(v.cVipsImage))
 		v.cVipsImage = nil
 	}
+	if v.goBytes != nil {
+		v.goBytes = nil
+	}
 }
 
 func newVipsImage(i *C.struct__VipsImage) *VipsImage {
-	return &VipsImage{i}
+	return &VipsImage{cVipsImage: i}
+}
+
+func newVipsImageWithSlice(i *C.struct__VipsImage, b []byte) *VipsImage {
+	return &VipsImage{cVipsImage: i, goBytes: b}
 }
 
 // Decode
@@ -510,7 +518,7 @@ func DecodeGifBytes(b []byte, options *DecodeGifOptions) (*VipsImage, error) {
 	if C.govips_gifload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.Page, cOptions.Access, cOptions.Disc) != 0 {
 		return nil, ErrLoad
 	}
-	return newVipsImage(i), nil
+	return newVipsImageWithSlice(i, b), nil
 }
 
 func DecodeJpegReader(r io.Reader, options *DecodeJpegOptions) (*VipsImage, error) {
@@ -531,7 +539,7 @@ func DecodeJpegBytes(b []byte, options *DecodeJpegOptions) (*VipsImage, error) {
 	if C.govips_jpegload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.Shrink, cOptions.Fail, cOptions.Autorotate, cOptions.Access, cOptions.Disc) != 0 {
 		return nil, ErrLoad
 	}
-	return newVipsImage(i), nil
+	return newVipsImageWithSlice(i, b), nil
 }
 
 func DecodeMagickReader(r io.Reader, options *DecodeMagickOptions) (*VipsImage, error) {
@@ -552,7 +560,7 @@ func DecodeMagickBytes(b []byte, options *DecodeMagickOptions) (*VipsImage, erro
 	if C.govips_magickload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.AllFrames, cOptions.Density, cOptions.Page, cOptions.Access, cOptions.Disc) != 0 {
 		return nil, ErrLoad
 	}
-	return newVipsImage(i), nil
+	return newVipsImageWithSlice(i, b), nil
 }
 
 func DecodePngReader(r io.Reader, options *DecodeOptions) (*VipsImage, error) {
@@ -572,7 +580,7 @@ func DecodePngBytes(b []byte, options *DecodeOptions) (*VipsImage, error) {
 	if C.govips_pngload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.Access, cOptions.Disc) != 0 {
 		return nil, ErrLoad
 	}
-	return newVipsImage(i), nil
+	return newVipsImageWithSlice(i, b), nil
 }
 
 func DecodeWebpReader(r io.Reader, options *DecodeWebpOptions) (*VipsImage, error) {
@@ -593,7 +601,7 @@ func DecodeWebpBytes(b []byte, options *DecodeWebpOptions) (*VipsImage, error) {
 	if C.govips_webpload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.Shrink, cOptions.Access, cOptions.Disc) != 0 {
 		return nil, ErrLoad
 	}
-	return newVipsImage(i), nil
+	return newVipsImageWithSlice(i, b), nil
 }
 
 // Encode
@@ -797,12 +805,12 @@ func EncodeWebpBytes(i *VipsImage, options *EncodeWebpOptions) ([]byte, error) {
 
 type EmbedOptions struct {
 	Extend     VipsExtend
-	Background *[]float64
+	Background []float64
 }
 
 func (o EmbedOptions) toC() cEmbedOptions {
 	var Background *C.struct__VipsArrayDouble
-	if o.Background != nil && len(*o.Background) > 0 {
+	if o.Background != nil && len(o.Background) > 0 {
 		Background = newVipsArrayDouble(o.Background)
 	}
 	return cEmbedOptions{
@@ -966,7 +974,7 @@ func Similarity(v *VipsImage, options *SimilarityOptions) (*VipsImage, error) {
 
 type AffineOptions struct {
 	Interpolate *VipsInterpolate
-	OArea       *[]int
+	OArea       []int
 	Idx         float64
 	Idy         float64
 	Odx         float64
@@ -979,7 +987,7 @@ func (o AffineOptions) toC() cAffineOptions {
 		interpolate = NewBilinearVipsInterpolator()
 	}
 	var oArea *C.struct__VipsArrayInt
-	if o.OArea != nil && len(*o.OArea) > 0 {
+	if o.OArea != nil && len(o.OArea) > 0 {
 		oArea = newVipsArrayInt(o.OArea)
 	}
 	return cAffineOptions{
@@ -1129,13 +1137,13 @@ func Sharpen(v *VipsImage, options *SharpenOptions) (*VipsImage, error) {
 }
 
 type FlattenOptions struct {
-	Background *[]float64
+	Background []float64
 	MaxAlpha   float64
 }
 
 func (o FlattenOptions) toC() cFlattenOptions {
 	var Background *C.struct__VipsArrayDouble
-	if o.Background != nil && len(*o.Background) > 0 {
+	if o.Background != nil && len(o.Background) > 0 {
 		Background = newVipsArrayDouble(o.Background)
 	}
 	if o.MaxAlpha == 0 {
@@ -1414,14 +1422,12 @@ func NewGrayVipsImage(vi *VipsImage) (*GrayVipsImage, error) {
 
 // Utilities...
 
-func newVipsArrayInt(slice *[]int) *C.struct__VipsArrayInt {
-	s := *slice
-	return C.vips_array_int_new((*C.int)(unsafe.Pointer(&s[0])), C.int(len(*slice)))
+func newVipsArrayInt(slice []int) *C.struct__VipsArrayInt {
+	return C.vips_array_int_new((*C.int)(unsafe.Pointer(&slice[0])), C.int(len(slice)))
 }
 
-func newVipsArrayDouble(slice *[]float64) *C.struct__VipsArrayDouble {
-	s := *slice
-	return C.vips_array_double_new((*C.double)(unsafe.Pointer(&s[0])), C.int(len(*slice)))
+func newVipsArrayDouble(slice []float64) *C.struct__VipsArrayDouble {
+	return C.vips_array_double_new((*C.double)(unsafe.Pointer(&slice[0])), C.int(len(slice)))
 }
 
 func vipsArrayDoubleUnref(i *C.struct__VipsArrayDouble) {

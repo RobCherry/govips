@@ -79,13 +79,13 @@ func Test_Flatten(t *testing.T) {
 	}
 
 	runTest(color.NRGBAModel.Convert(color.Black), nil)
-	runTest(color.NRGBAModel.Convert(color.Black), &FlattenOptions{Background: &[]float64{0}})
-	runTest(color.NRGBAModel.Convert(color.Black), &FlattenOptions{Background: &[]float64{0, 0, 0}})
+	runTest(color.NRGBAModel.Convert(color.Black), &FlattenOptions{Background: []float64{0}})
+	runTest(color.NRGBAModel.Convert(color.Black), &FlattenOptions{Background: []float64{0, 0, 0}})
 	runTest(color.NRGBAModel.Convert(color.Black), &FlattenOptions{Background: VIPS_BACKGROUND_BLACK})
-	runTest(color.NRGBAModel.Convert(color.White), &FlattenOptions{Background: &[]float64{255}})
-	runTest(color.NRGBAModel.Convert(color.White), &FlattenOptions{Background: &[]float64{255, 255, 255}})
+	runTest(color.NRGBAModel.Convert(color.White), &FlattenOptions{Background: []float64{255}})
+	runTest(color.NRGBAModel.Convert(color.White), &FlattenOptions{Background: []float64{255, 255, 255}})
 	runTest(color.NRGBAModel.Convert(color.White), &FlattenOptions{Background: VIPS_BACKGROUND_WHITE})
-	runTest(color.NRGBA{255, 0, 0, 255}, &FlattenOptions{Background: &[]float64{255, 0, 0}})
-	runTest(color.NRGBA{0, 255, 0, 255}, &FlattenOptions{Background: &[]float64{0, 255, 0}})
-	runTest(color.NRGBA{0, 0, 255, 255}, &FlattenOptions{Background: &[]float64{0, 0, 255}})
+	runTest(color.NRGBA{255, 0, 0, 255}, &FlattenOptions{Background: []float64{255, 0, 0}})
+	runTest(color.NRGBA{0, 255, 0, 255}, &FlattenOptions{Background: []float64{0, 255, 0}})
+	runTest(color.NRGBA{0, 0, 255, 255}, &FlattenOptions{Background: []float64{0, 0, 255}})
 }
