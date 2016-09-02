@@ -13,6 +13,7 @@ import (
 	"image/color"
 	"io"
 	"io/ioutil"
+	"sync"
 	"sync/atomic"
 	"unsafe"
 )
@@ -61,19 +62,20 @@ type Config struct {
 }
 
 var (
-	initialized uint32
+	initializeLock sync.Mutex
+	initialized    uint32
 )
 
 func Initialize() error {
-	if atomic.LoadUint32(&initialized) == 1 {
-		return nil
+	initializeLock.Lock()
+	defer initializeLock.Unlock()
+	if atomic.LoadUint32(&initialized) == 0 {
+		if err := C.vips_init(C.CString("govips")); err != 0 {
+			C.vips_shutdown()
+			return ErrInitialize
+		}
+		atomic.StoreUint32(&initialized, 1)
 	}
-	if err := C.vips_init(C.CString("govips")); err != 0 {
-		C.vips_shutdown()
-		return ErrInitialize
-	}
-	atomic.StoreUint32(&initialized, 1)
-
 	return nil
 }
 
@@ -86,6 +88,8 @@ func InitializeWithConfig(config Config) error {
 }
 
 func Configure(config Config) error {
+	initializeLock.Lock()
+	defer initializeLock.Unlock()
 	if atomic.LoadUint32(&initialized) == 0 {
 		return ErrConfigure
 	}
@@ -113,11 +117,12 @@ func Configure(config Config) error {
 }
 
 func Shutdown() {
-	if atomic.LoadUint32(&initialized) == 0 {
-		return
+	initializeLock.Lock()
+	defer initializeLock.Unlock()
+	if atomic.LoadUint32(&initialized) == 1 {
+		C.vips_shutdown()
+		atomic.StoreUint32(&initialized, 0)
 	}
-	C.vips_shutdown()
-	atomic.StoreUint32(&initialized, 0)
 }
 
 func ThreadShutdown() {
