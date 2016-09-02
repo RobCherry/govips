@@ -149,6 +149,10 @@ int govips_colourspace(VipsImage *in, VipsImage **out, VipsInterpretation space,
   return vips_colourspace(in, out, space, "source_space", source_space, NULL);
 }
 
+int govips_icc_transform(VipsImage *in, VipsImage **out, const char *output_profile, const char *input_profile, VipsIntent intent, int depth, gboolean embedded) {
+  return vips_icc_transform(in, out, output_profile, "input_profile", input_profile, "intent", intent, "depth", depth, "embedded", embedded, NULL);
+}
+
 VipsRect govips_rect_new(int left, int top, int width, int height) {
   VipsRect r = { .left = left, .top = top, .width = width, .height = height };
   return r;

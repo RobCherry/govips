@@ -5,6 +5,39 @@ import (
 	"testing"
 )
 
+func TestVipsImage_HasProfile(t *testing.T) {
+	err := Initialize()
+	defer ThreadShutdown()
+	defer checkErrorBuffer(t)
+	checkError(t, err)
+	vi := test_DecodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, &DecodeJpegOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}})
+	defer vi.Free()
+	if !vi.HasProfile() {
+		t.Fatal("Color profile is missing")
+	}
+	vi2 := test_DecodeJpegVips(t, "benchmark_images/1_bw.jpg", BENCHMARK_IMAGE_1_BOUNDS, &DecodeJpegOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}})
+	defer vi2.Free()
+	if vi2.HasProfile() {
+		t.Fatal("Color profile is present")
+	}
+}
+
+func TestVipsImage_RemoveProfile(t *testing.T) {
+	err := Initialize()
+	defer ThreadShutdown()
+	defer checkErrorBuffer(t)
+	checkError(t, err)
+	vi := test_DecodeJpegVips(t, "benchmark_images/1.jpg", BENCHMARK_IMAGE_1_BOUNDS, &DecodeJpegOptions{DecodeOptions: DecodeOptions{Access: VIPS_ACCESS_SEQUENTIAL}})
+	defer vi.Free()
+	if !vi.HasProfile() {
+		t.Fatal("Color profile is missing")
+	}
+	vi.RemoveProfile()
+	if vi.HasProfile() {
+		t.Fatal("Color profile is present")
+	}
+}
+
 func Test_NRGBAVipsImage(t *testing.T) {
 	err := Initialize()
 	defer ThreadShutdown()

@@ -37,16 +37,17 @@ var (
 	ErrLoad = errors.New("Failed to load image")
 	ErrSave = errors.New("Failed to save image")
 
-	ErrEmbed       = errors.New("Failed to embed image")
-	ErrCrop        = errors.New("Failed to crop image")
-	ErrShrink      = errors.New("Failed to shrink image")
-	ErrReduce      = errors.New("Failed to reduce image")
-	ErrResize      = errors.New("Failed to resize image")
-	ErrAffine      = errors.New("Failed to affine image")
-	ErrBlur        = errors.New("Failed to blur image")
-	ErrSharpen     = errors.New("Failed to sharpen image")
-	ErrFlatten     = errors.New("Failed to flatten image")
-	ErrColourspace = errors.New("Failed to convert colourspace of image")
+	ErrEmbed        = errors.New("Failed to embed image")
+	ErrCrop         = errors.New("Failed to crop image")
+	ErrShrink       = errors.New("Failed to shrink image")
+	ErrReduce       = errors.New("Failed to reduce image")
+	ErrResize       = errors.New("Failed to resize image")
+	ErrAffine       = errors.New("Failed to affine image")
+	ErrBlur         = errors.New("Failed to blur image")
+	ErrSharpen      = errors.New("Failed to sharpen image")
+	ErrFlatten      = errors.New("Failed to flatten image")
+	ErrColourspace  = errors.New("Failed to convert colourspace of image")
+	ErrICCTransform = errors.New("Failed to transform colourspace of image")
 )
 
 var (
@@ -70,7 +71,7 @@ func Initialize() error {
 	initializeLock.Lock()
 	defer initializeLock.Unlock()
 	if atomic.LoadUint32(&initialized) == 0 {
-		if err := C.vips_init(C.CString("govips")); err != 0 {
+		if err := C.vips_init(cApplicationNane); err != 0 {
 			C.vips_shutdown()
 			return ErrInitialize
 		}
@@ -141,6 +142,11 @@ func ErrorBuffer() error {
 }
 
 // Constants
+
+var (
+	cApplicationNane    = C.CString("govips")
+	cVIPS_META_ICC_NAME = C.CString(C.VIPS_META_ICC_NAME)
+)
 
 type VipsInterpretation int
 
@@ -320,6 +326,33 @@ const (
 	VIPS_PRECISION_LAST
 )
 
+type VipsIntent int
+
+func (i VipsIntent) toC() C.VipsIntent {
+	switch i {
+	case VIPS_INTENT_PERCEPTUAL:
+		return C.VIPS_INTENT_PERCEPTUAL
+	case VIPS_INTENT_RELATIVE:
+		return C.VIPS_INTENT_RELATIVE
+	case VIPS_INTENT_SATURATION:
+		return C.VIPS_INTENT_SATURATION
+	case VIPS_INTENT_ABSOLUTE:
+		return C.VIPS_INTENT_ABSOLUTE
+	case VIPS_INTENT_LAST:
+		return C.VIPS_INTENT_LAST
+	default:
+		return C.VIPS_INTENT_PERCEPTUAL
+	}
+}
+
+const (
+	VIPS_INTENT_PERCEPTUAL = iota
+	VIPS_INTENT_RELATIVE
+	VIPS_INTENT_SATURATION
+	VIPS_INTENT_ABSOLUTE
+	VIPS_INTENT_LAST
+)
+
 // Image
 
 type VipsImage struct {
@@ -346,6 +379,17 @@ func (v *VipsImage) Bands() int {
 		return 0
 	}
 	return int(v.cVipsImage.Bands)
+}
+
+func (v *VipsImage) HasProfile() bool {
+	if v.cVipsImage == nil {
+		return false
+	}
+	return C.vips_image_get_typeof(v.cVipsImage, cVIPS_META_ICC_NAME) != 0
+}
+
+func (v *VipsImage) RemoveProfile() {
+	C.vips_image_remove(v.cVipsImage, cVIPS_META_ICC_NAME)
 }
 
 func (v *VipsImage) Free() {
@@ -1216,6 +1260,61 @@ func Colourspace(v *VipsImage, space VipsInterpretation, options *ColourspaceOpt
 
 func ColourspaceIsSupported(v *VipsImage) bool {
 	return fromGBool(C.vips_colourspace_issupported(v.cVipsImage))
+}
+
+type ICCTransformOptions struct {
+	InputProfile string
+	Intent       VipsIntent
+	Depth        int
+	Embedded     bool
+}
+
+func (o ICCTransformOptions) toC() cICCTransformOptions {
+	var inputProfile *C.char
+	if o.InputProfile == STRING_ZERO {
+		inputProfile = C.CString("")
+	} else if o.InputProfile != "" {
+		inputProfile = C.CString(o.InputProfile)
+	}
+	if o.Depth == 0 {
+		o.Depth = 8
+	} else if o.Depth == INT_ZERO {
+		o.Depth = 0
+	}
+	return cICCTransformOptions{
+		InputProfile: inputProfile,
+		Intent:       o.Intent.toC(),
+		Depth:        C.int(o.Depth),
+		Embedded:     toGBool(o.Embedded),
+	}
+}
+
+type cICCTransformOptions struct {
+	InputProfile *C.char
+	Intent       C.VipsIntent
+	Depth        C.int
+	Embedded     C.gboolean
+}
+
+func (c *cICCTransformOptions) Free() {
+	if c.InputProfile != nil {
+		C.free(unsafe.Pointer(c.InputProfile))
+	}
+}
+
+func ICCTransform(v *VipsImage, outputProfile string, options *ICCTransformOptions) (*VipsImage, error) {
+	if options == nil {
+		options = &ICCTransformOptions{}
+	}
+	cOptions := options.toC()
+	defer cOptions.Free()
+	p := C.CString(outputProfile)
+	defer C.free(unsafe.Pointer(p))
+	var i *C.struct__VipsImage
+	if C.govips_icc_transform(v.cVipsImage, &i, p, cOptions.InputProfile, cOptions.Intent, cOptions.Depth, cOptions.Embedded) != 0 {
+		return nil, ErrICCTransform
+	}
+	return newVipsImage(i, v.goBytes), nil
 }
 
 // Interpolators

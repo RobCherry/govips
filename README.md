@@ -46,16 +46,19 @@ cli -r 300x300 -q 90 -fast-resize -v path/to/input.jpg path/to/output.jpg
 
 ## Roadmap
 
-- [ ] Tests
-- [ ] Builder
 - [ ] Documentation
-- [ ] Color Profiles
+- [ ] Tests
 
 ## Author
 
 [Rob Cherry](https://github.com/RobCherry)
 
-## Contributing ##
+## Contributing
 
 Contributions welcome! Please fork the repository and open a pull request with your changes.
 
+## Notes
+
+The provided sRGB ICC profile is from [icc-profiles-free](https://packages.debian.org/sid/all/icc-profiles-free/filelist)
+
+The provided CMYK ICC profile is from [Argyll Color Management System](http://www.argyllcms.com/cmyk.icm)
