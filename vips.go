@@ -353,11 +353,7 @@ func (v *VipsImage) Free() {
 	}
 }
 
-func newVipsImage(i *C.struct__VipsImage) *VipsImage {
-	return &VipsImage{cVipsImage: i}
-}
-
-func newVipsImageWithSlice(i *C.struct__VipsImage, b []byte) *VipsImage {
+func newVipsImage(i *C.struct__VipsImage, b []byte) *VipsImage {
 	return &VipsImage{cVipsImage: i, goBytes: b}
 }
 
@@ -518,7 +514,7 @@ func DecodeGifBytes(b []byte, options *DecodeGifOptions) (*VipsImage, error) {
 	if C.govips_gifload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.Page, cOptions.Access, cOptions.Disc) != 0 {
 		return nil, ErrLoad
 	}
-	return newVipsImageWithSlice(i, b), nil
+	return newVipsImage(i, b), nil
 }
 
 func DecodeJpegReader(r io.Reader, options *DecodeJpegOptions) (*VipsImage, error) {
@@ -539,7 +535,7 @@ func DecodeJpegBytes(b []byte, options *DecodeJpegOptions) (*VipsImage, error) {
 	if C.govips_jpegload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.Shrink, cOptions.Fail, cOptions.Autorotate, cOptions.Access, cOptions.Disc) != 0 {
 		return nil, ErrLoad
 	}
-	return newVipsImageWithSlice(i, b), nil
+	return newVipsImage(i, b), nil
 }
 
 func DecodeMagickReader(r io.Reader, options *DecodeMagickOptions) (*VipsImage, error) {
@@ -560,7 +556,7 @@ func DecodeMagickBytes(b []byte, options *DecodeMagickOptions) (*VipsImage, erro
 	if C.govips_magickload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.AllFrames, cOptions.Density, cOptions.Page, cOptions.Access, cOptions.Disc) != 0 {
 		return nil, ErrLoad
 	}
-	return newVipsImageWithSlice(i, b), nil
+	return newVipsImage(i, b), nil
 }
 
 func DecodePngReader(r io.Reader, options *DecodeOptions) (*VipsImage, error) {
@@ -580,7 +576,7 @@ func DecodePngBytes(b []byte, options *DecodeOptions) (*VipsImage, error) {
 	if C.govips_pngload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.Access, cOptions.Disc) != 0 {
 		return nil, ErrLoad
 	}
-	return newVipsImageWithSlice(i, b), nil
+	return newVipsImage(i, b), nil
 }
 
 func DecodeWebpReader(r io.Reader, options *DecodeWebpOptions) (*VipsImage, error) {
@@ -601,7 +597,7 @@ func DecodeWebpBytes(b []byte, options *DecodeWebpOptions) (*VipsImage, error) {
 	if C.govips_webpload_buffer(unsafe.Pointer(&b[0]), C.size_t(len(b)), &i, cOptions.Shrink, cOptions.Access, cOptions.Disc) != 0 {
 		return nil, ErrLoad
 	}
-	return newVipsImageWithSlice(i, b), nil
+	return newVipsImage(i, b), nil
 }
 
 // Encode
@@ -840,7 +836,7 @@ func Embed(v *VipsImage, x, y, width, height int, options *EmbedOptions) (*VipsI
 	if C.govips_embed(v.cVipsImage, &i, C.int(x), C.int(y), C.int(width), C.int(height), cOptions.Extend, cOptions.Background) != 0 {
 		return nil, ErrEmbed
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 func ExtractArea(v *VipsImage, left, top, width, height int) (*VipsImage, error) {
@@ -848,7 +844,7 @@ func ExtractArea(v *VipsImage, left, top, width, height int) (*VipsImage, error)
 	if C.govips_extract_area(v.cVipsImage, &i, C.int(left), C.int(top), C.int(width), C.int(height)) != 0 {
 		return nil, ErrCrop
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 func Crop(v *VipsImage, left, top, width, height int) (*VipsImage, error) {
@@ -860,7 +856,7 @@ func Shrink(v *VipsImage, xshrink, yshrink float64) (*VipsImage, error) {
 	if C.govips_shrink(v.cVipsImage, &i, C.double(xshrink), C.double(yshrink)) != 0 {
 		return nil, ErrShrink
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 func ShrinkH(v *VipsImage, xshrink float64) (*VipsImage, error) {
@@ -868,7 +864,7 @@ func ShrinkH(v *VipsImage, xshrink float64) (*VipsImage, error) {
 	if C.govips_shrinkh(v.cVipsImage, &i, C.double(xshrink)) != 0 {
 		return nil, ErrShrink
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 func ShrinkV(v *VipsImage, yshrink float64) (*VipsImage, error) {
@@ -876,7 +872,7 @@ func ShrinkV(v *VipsImage, yshrink float64) (*VipsImage, error) {
 	if C.govips_shrinkv(v.cVipsImage, &i, C.double(yshrink)) != 0 {
 		return nil, ErrShrink
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 func Reduce(v *VipsImage, xshrink, yshrink float64, kernel VipsKernel) (*VipsImage, error) {
@@ -884,7 +880,7 @@ func Reduce(v *VipsImage, xshrink, yshrink float64, kernel VipsKernel) (*VipsIma
 	if C.govips_reduce(v.cVipsImage, &i, C.double(xshrink), C.double(yshrink), C.VipsKernel(kernel)) != 0 {
 		return nil, ErrReduce
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 func ReduceH(v *VipsImage, xshrink float64, kernel VipsKernel) (*VipsImage, error) {
@@ -892,7 +888,7 @@ func ReduceH(v *VipsImage, xshrink float64, kernel VipsKernel) (*VipsImage, erro
 	if C.govips_reduceh(v.cVipsImage, &i, C.double(xshrink), C.VipsKernel(kernel)) != 0 {
 		return nil, ErrReduce
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 func ReduceV(v *VipsImage, yshrink float64, kernel VipsKernel) (*VipsImage, error) {
@@ -900,7 +896,7 @@ func ReduceV(v *VipsImage, yshrink float64, kernel VipsKernel) (*VipsImage, erro
 	if C.govips_reducev(v.cVipsImage, &i, C.double(yshrink), C.VipsKernel(kernel)) != 0 {
 		return nil, ErrReduce
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 func Resize(v *VipsImage, scale, vscale float64, kernel VipsKernel) (*VipsImage, error) {
@@ -908,7 +904,7 @@ func Resize(v *VipsImage, scale, vscale float64, kernel VipsKernel) (*VipsImage,
 	if C.govips_resize(v.cVipsImage, &i, C.double(scale), C.double(vscale), C.VipsKernel(kernel)) != 0 {
 		return nil, ErrResize
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 type SimilarityOptions struct {
@@ -969,7 +965,7 @@ func Similarity(v *VipsImage, options *SimilarityOptions) (*VipsImage, error) {
 	if C.govips_similarity(v.cVipsImage, &i, cOptions.Scale, cOptions.Angle, cOptions.Interpolate, cOptions.Idx, cOptions.Idy, cOptions.Odx, cOptions.Ody) != 0 {
 		return nil, ErrAffine
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 type AffineOptions struct {
@@ -1026,7 +1022,7 @@ func Affine(v *VipsImage, a, b, c, d float64, options *AffineOptions) (*VipsImag
 	if C.govips_affine(v.cVipsImage, &i, C.double(a), C.double(b), C.double(c), C.double(d), cOptions.Interpolate, cOptions.OArea, cOptions.Idx, cOptions.Idy, cOptions.Odx, cOptions.Ody) != 0 {
 		return nil, ErrAffine
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 type BlurOptions struct {
@@ -1062,7 +1058,7 @@ func Blur(v *VipsImage, sigma float64, options *BlurOptions) (*VipsImage, error)
 	if C.govips_gaussblur(v.cVipsImage, &i, C.double(sigma), cOptions.Precision, cOptions.MinimumAmplitude) != 0 {
 		return nil, ErrBlur
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 type SharpenOptions struct {
@@ -1133,7 +1129,7 @@ func Sharpen(v *VipsImage, options *SharpenOptions) (*VipsImage, error) {
 	if C.govips_sharpen(v.cVipsImage, &i, cOptions.Sigma, cOptions.X1, cOptions.Y2, cOptions.Y3, cOptions.M1, cOptions.M2) != 0 {
 		return nil, ErrSharpen
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 type FlattenOptions struct {
@@ -1178,7 +1174,7 @@ func Flatten(v *VipsImage, options *FlattenOptions) (*VipsImage, error) {
 	if C.govips_flatten(v.cVipsImage, &i, cOptions.Background, cOptions.MaxAlpha) != 0 {
 		return nil, ErrFlatten
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 type ColourspaceOptions struct {
@@ -1210,7 +1206,7 @@ func Colourspace(v *VipsImage, space VipsInterpretation, options *ColourspaceOpt
 	if C.govips_colourspace(v.cVipsImage, &i, space.toC(), cOptions.SourceSpace) != 0 {
 		return nil, ErrColourspace
 	}
-	return newVipsImage(i), nil
+	return newVipsImage(i, v.goBytes), nil
 }
 
 func ColourspaceIsSupported(v *VipsImage) bool {
