@@ -61,4 +61,4 @@ Contributions welcome! Please fork the repository and open a pull request with y
 
 The provided sRGB ICC profile is from [icc-profiles-free](https://packages.debian.org/sid/all/icc-profiles-free/filelist)
 
-The provided CMYK ICC profile is from [Argyll Color Management System](http://www.argyllcms.com/cmyk.icm)
+The provided CMYK ICM profile is from [Argyll Color Management System](http://www.argyllcms.com/cmyk.icm)
