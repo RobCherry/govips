@@ -518,6 +518,7 @@ func (c *cDecodeMagickOptions) Free() {
 	c.cDecodeOptions.Free()
 	if c.Density != nil {
 		C.free(unsafe.Pointer(c.Density))
+		c.Density = nil
 	}
 }
 
@@ -706,6 +707,7 @@ type cEncodeJpegOptions struct {
 func (c *cEncodeJpegOptions) Free() {
 	if c.Profile != nil {
 		C.free(unsafe.Pointer(c.Profile))
+		c.Profile = nil
 	}
 }
 
@@ -770,6 +772,7 @@ type cEncodePngOptions struct {
 func (c *cEncodePngOptions) Free() {
 	if c.Profile != nil {
 		C.free(unsafe.Pointer(c.Profile))
+		c.Profile = nil
 	}
 }
 
@@ -872,6 +875,7 @@ type cEmbedOptions struct {
 func (c *cEmbedOptions) Free() {
 	if c.Background != nil {
 		vipsArrayDoubleUnref(c.Background)
+		c.Background = nil
 	}
 }
 
@@ -1001,7 +1005,10 @@ type cSimilarityOptions struct {
 }
 
 func (c *cSimilarityOptions) Free() {
-	C.g_object_unref(C.gpointer(c.Interpolate))
+	if c.Interpolate != nil {
+		C.g_object_unref(C.gpointer(c.Interpolate))
+		c.Interpolate = nil
+	}
 }
 
 func Similarity(v *VipsImage, options *SimilarityOptions) (*VipsImage, error) {
@@ -1055,9 +1062,13 @@ type cAffineOptions struct {
 }
 
 func (c *cAffineOptions) Free() {
-	C.g_object_unref(C.gpointer(c.Interpolate))
+	if c.Interpolate != nil {
+		C.g_object_unref(C.gpointer(c.Interpolate))
+		c.Interpolate = nil
+	}
 	if c.OArea != nil {
 		vipsArrayIntUnref(c.OArea)
+		c.OArea = nil
 	}
 }
 
@@ -1210,6 +1221,7 @@ type cFlattenOptions struct {
 func (c *cFlattenOptions) Free() {
 	if c.Background != nil {
 		vipsArrayDoubleUnref(c.Background)
+		c.Background = nil
 	}
 }
 
@@ -1299,6 +1311,7 @@ type cICCTransformOptions struct {
 func (c *cICCTransformOptions) Free() {
 	if c.InputProfile != nil {
 		C.free(unsafe.Pointer(c.InputProfile))
+		c.InputProfile = nil
 	}
 }
 
@@ -1335,11 +1348,11 @@ func (i *VipsInterpolate) Free() {
 func NewVipsInterpolator(interpolator string) (*VipsInterpolate, error) {
 	s := C.CString(interpolator)
 	defer C.free(unsafe.Pointer(s))
-	i := C.vips_interpolate_new(s)
-	if i == nil {
+	cVipsInterpolate := C.vips_interpolate_new(s)
+	if cVipsInterpolate == nil {
 		return nil, fmt.Errorf("Failed to create interpolator for: %s", interpolator)
 	}
-	return &VipsInterpolate{interpolator, i}, nil
+	return &VipsInterpolate{interpolator, cVipsInterpolate}, nil
 }
 
 func NewNearestVipsInterpolator() *VipsInterpolate {
