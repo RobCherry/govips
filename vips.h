@@ -35,6 +35,21 @@ int govips_jpegsave_buffer(VipsImage *input, void **output, size_t *length, gint
     NULL);
 }
 
+int govips_jpegsave(VipsImage *input, const char *filename, gint Q, const char *profile, gboolean optimize_coding, gboolean interlace, gboolean strip, gboolean nosubsample, gboolean trellis_quant, gboolean overshoot_deringing, gboolean optimize_scans) {
+  return vips_jpegsave(input, filename,
+    "Q", Q,
+    "profile", profile,
+    "optimize_coding", optimize_coding,
+    "interlace", interlace,
+    "strip", strip,
+    "no-subsample", nosubsample,
+    "trellis_quant", trellis_quant,
+    "overshoot_deringing", overshoot_deringing,
+    "optimize_scans", optimize_scans,
+    //"quant_table", quant_table, // Version 8.4.0+
+    NULL);
+}
+
 int govips_magickload_buffer(void *input, size_t length, VipsImage **output, gboolean all_frames, const char *density, gint page, VipsAccess access, gboolean disc) {
   return vips_magickload_buffer(input, length, output,
     "all_frames", all_frames,
@@ -61,6 +76,15 @@ int govips_pngsave_buffer(VipsImage *input, void **output, size_t *length, gint 
     NULL);
 }
 
+int govips_pngsave(VipsImage *input, const char *filename, gint compression, gboolean interlace, const char *profile, VipsForeignPngFilter filter) {
+  return vips_pngsave(input, filename,
+    "compression", compression,
+    "interlace", interlace,
+    "profile", profile,
+    "filter", filter,
+    NULL);
+}
+
 int govips_webpload_buffer(void *input, size_t length, VipsImage **output, gint shrink, VipsAccess access, gboolean disc) {
   return vips_webpload_buffer(input, length, output,
     "shrink", shrink,
@@ -71,6 +95,17 @@ int govips_webpload_buffer(void *input, size_t length, VipsImage **output, gint 
 
 int govips_webpsave_buffer(VipsImage *input, void **output, size_t *length, gint Q, gboolean lossless) {
   return vips_webpsave_buffer(input, output, length,
+    "Q", Q,
+    "lossless", lossless,
+    //"preset", preset, // Version 8.4.0+
+    //"smart_subsample", smart_subsample, // Version 8.4.0+
+    //"near_lossless", near_lossless, // Version 8.4.0+
+    //"alpha_q", alpha_q, // Version 8.4.0+
+    NULL);
+}
+
+int govips_webpsave(VipsImage *input, const char *filename, gint Q, gboolean lossless) {
+  return vips_webpsave(input, filename,
     "Q", Q,
     "lossless", lossless,
     //"preset", preset, // Version 8.4.0+

@@ -13,6 +13,7 @@ import (
 	"image/color"
 	"io"
 	"io/ioutil"
+	"os"
 	"sync"
 	"sync/atomic"
 	"unsafe"
@@ -711,12 +712,18 @@ func (c *cEncodeJpegOptions) Free() {
 	}
 }
 
-func EncodeJpegWriter(w io.Writer, i *VipsImage, options *EncodeJpegOptions) (int, error) {
-	bytes, err := EncodeJpegBytes(i, options)
-	if err != nil {
-		return 0, err
+func EncodeJpegFile(i *VipsImage, file *os.File, options *EncodeJpegOptions) error {
+	if options == nil {
+		options = &EncodeJpegOptions{}
 	}
-	return w.Write(bytes)
+	cOptions := options.toC()
+	defer cOptions.Free()
+	cFileName := C.CString(file.Name())
+	defer C.free(unsafe.Pointer(cFileName))
+	if C.govips_jpegsave(i.cVipsImage, cFileName, cOptions.Q, cOptions.Profile, cOptions.OptimizeCoding, cOptions.Interlace, cOptions.Strip, cOptions.NoSubsample, cOptions.TrellisQuantization, cOptions.OvershootDeringing, cOptions.OptimizeScans) != 0 {
+		return ErrSave
+	}
+	return nil
 }
 
 func EncodeJpegBytes(i *VipsImage, options *EncodeJpegOptions) ([]byte, error) {
@@ -776,12 +783,18 @@ func (c *cEncodePngOptions) Free() {
 	}
 }
 
-func EncodePngWriter(w io.Writer, i *VipsImage, options *EncodePngOptions) (int, error) {
-	bytes, err := EncodePngBytes(i, options)
-	if err != nil {
-		return 0, err
+func EncodePngFile(i *VipsImage, file *os.File, options *EncodePngOptions) error {
+	if options == nil {
+		options = &EncodePngOptions{}
 	}
-	return w.Write(bytes)
+	cOptions := options.toC()
+	defer cOptions.Free()
+	cFileName := C.CString(file.Name())
+	defer C.free(unsafe.Pointer(cFileName))
+	if C.govips_pngsave(i.cVipsImage, cFileName, cOptions.Compression, cOptions.Interlace, cOptions.Profile, cOptions.Filter) != 0 {
+		return ErrSave
+	}
+	return nil
 }
 
 func EncodePngBytes(i *VipsImage, options *EncodePngOptions) ([]byte, error) {
@@ -825,12 +838,18 @@ type cEncodeWebpOptions struct {
 func (c *cEncodeWebpOptions) Free() {
 }
 
-func EncodeWebpWriter(w io.Writer, i *VipsImage, options *EncodeWebpOptions) (int, error) {
-	bytes, err := EncodeWebpBytes(i, options)
-	if err != nil {
-		return 0, err
+func EncodeWebpFile(i *VipsImage, file *os.File, options *EncodeWebpOptions) error {
+	if options == nil {
+		options = &EncodeWebpOptions{}
 	}
-	return w.Write(bytes)
+	cOptions := options.toC()
+	defer cOptions.Free()
+	cFileName := C.CString(file.Name())
+	defer C.free(unsafe.Pointer(cFileName))
+	if C.govips_webpsave(i.cVipsImage, cFileName, cOptions.Q, cOptions.Lossless) != 0 {
+		return ErrSave
+	}
+	return nil
 }
 
 func EncodeWebpBytes(i *VipsImage, options *EncodeWebpOptions) ([]byte, error) {

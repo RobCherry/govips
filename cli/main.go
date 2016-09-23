@@ -185,11 +185,11 @@ func main() {
 		localStartTime := time.Now()
 		switch format {
 		case "jpeg":
-			_, err = govips.EncodeJpegWriter(output, i, &govips.EncodeJpegOptions{Q: quality, OptimizeCoding: true, Strip: true, NoSubsample: true})
+			err = govips.EncodeJpegFile(i, output, &govips.EncodeJpegOptions{Q: quality, OptimizeCoding: true, Strip: true, NoSubsample: true})
 		case "gif", "png":
-			_, err = govips.EncodePngWriter(output, i, &govips.EncodePngOptions{Compression: 6})
+			err = govips.EncodePngFile(i, output, &govips.EncodePngOptions{Compression: 6})
 		case "webp":
-			_, err = govips.EncodeWebpWriter(output, i, &govips.EncodeWebpOptions{Q: quality})
+			err = govips.EncodeWebpFile(i, output, &govips.EncodeWebpOptions{Q: quality})
 		default:
 			err = fmt.Errorf("Invalid image format: %s\n", format)
 		}
