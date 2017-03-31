@@ -203,14 +203,13 @@ const (
 	VIPS_ACCESS_LAST
 )
 
-// Version 8.4.0+
-//const (
-//	JPEG_QUANTIZATION_TABLE_DEFAULT int = 0
-//	JPEG_QUANTIZATION_TABLE_FLAT
-//	JPEG_QUANTIZATION_TABLE_MSSIM
-//	JPEG_QUANTIZATION_TABLE_IMAGEMAGICK
-//	JPEG_QUANTIZATION_TABLE_PSNR_HVS_M
-//)
+const (
+	JPEG_QUANTIZATION_TABLE_DEFAULT int = 0
+	JPEG_QUANTIZATION_TABLE_FLAT
+	JPEG_QUANTIZATION_TABLE_MSSIM
+	JPEG_QUANTIZATION_TABLE_IMAGEMAGICK
+	JPEG_QUANTIZATION_TABLE_PSNR_HVS_M
+)
 
 type PngFilter int
 
@@ -241,6 +240,37 @@ const (
 	VIPS_PNG_FILTER_AVG
 	VIPS_PNG_FILTER_PAETH
 	VIPS_PNG_FILTER_ALL
+)
+
+type WebpPreset int
+
+func (p WebpPreset) toC() C.VipsForeignWebpPreset {
+	switch p {
+	case VIPS_WEBP_PRESET_DEFAULT:
+		return C.VIPS_FOREIGN_WEBP_PRESET_DEFAULT
+	case VIPS_WEBP_PRESET_PICTURE:
+		return C.VIPS_FOREIGN_WEBP_PRESET_PICTURE
+	case VIPS_WEBP_PRESET_PHOTO:
+		return C.VIPS_FOREIGN_WEBP_PRESET_PHOTO
+	case VIPS_WEBP_PRESET_DRAWING:
+		return C.VIPS_FOREIGN_WEBP_PRESET_DRAWING
+	case VIPS_WEBP_PRESET_ICON:
+		return C.VIPS_FOREIGN_WEBP_PRESET_ICON
+	case VIPS_WEBP_PRESET_TEXT:
+		return C.VIPS_FOREIGN_WEBP_PRESET_TEXT
+	default:
+		return C.VIPS_FOREIGN_WEBP_PRESET_LAST
+	}
+}
+
+const (
+	VIPS_WEBP_PRESET_DEFAULT WebpPreset = iota
+	VIPS_WEBP_PRESET_PICTURE
+	VIPS_WEBP_PRESET_PHOTO
+	VIPS_WEBP_PRESET_DRAWING
+	VIPS_WEBP_PRESET_ICON
+	VIPS_WEBP_PRESET_TEXT
+	VIPS_WEBP_PRESET_LAST
 )
 
 type VipsExtend int
@@ -663,7 +693,7 @@ type EncodeJpegOptions struct {
 	TrellisQuantization bool
 	OvershootDeringing  bool
 	OptimizeScans       bool
-	//QuantizationTable int // Vips 8.4+
+	QuantizationTable   int
 }
 
 func (o EncodeJpegOptions) toC() cEncodeJpegOptions {
@@ -688,7 +718,7 @@ func (o EncodeJpegOptions) toC() cEncodeJpegOptions {
 		TrellisQuantization: toGBool(o.TrellisQuantization),
 		OvershootDeringing:  toGBool(o.OvershootDeringing),
 		OptimizeScans:       toGBool(o.OptimizeScans),
-		//QuantizationTable: C.gint(o.QuantizationTable),
+		QuantizationTable:   C.gint(o.QuantizationTable),
 	}
 }
 
@@ -702,7 +732,7 @@ type cEncodeJpegOptions struct {
 	TrellisQuantization C.gboolean
 	OvershootDeringing  C.gboolean
 	OptimizeScans       C.gboolean
-	//QuantizationTable C.gint
+	QuantizationTable   C.gint
 }
 
 func (c *cEncodeJpegOptions) Free() {
@@ -720,7 +750,7 @@ func EncodeJpegFile(i *VipsImage, file *os.File, options *EncodeJpegOptions) err
 	defer cOptions.Free()
 	cFileName := C.CString(file.Name())
 	defer C.free(unsafe.Pointer(cFileName))
-	if C.govips_jpegsave(i.cVipsImage, cFileName, cOptions.Q, cOptions.Profile, cOptions.OptimizeCoding, cOptions.Interlace, cOptions.Strip, cOptions.NoSubsample, cOptions.TrellisQuantization, cOptions.OvershootDeringing, cOptions.OptimizeScans) != 0 {
+	if C.govips_jpegsave(i.cVipsImage, cFileName, cOptions.Q, cOptions.Profile, cOptions.OptimizeCoding, cOptions.Interlace, cOptions.Strip, cOptions.NoSubsample, cOptions.TrellisQuantization, cOptions.OvershootDeringing, cOptions.OptimizeScans, cOptions.QuantizationTable) != 0 {
 		return ErrSave
 	}
 	return nil
@@ -734,7 +764,7 @@ func EncodeJpegBytes(i *VipsImage, options *EncodeJpegOptions) ([]byte, error) {
 	defer cOptions.Free()
 	var obuf unsafe.Pointer
 	olen := C.size_t(0)
-	if C.govips_jpegsave_buffer(i.cVipsImage, &obuf, &olen, cOptions.Q, cOptions.Profile, cOptions.OptimizeCoding, cOptions.Interlace, cOptions.Strip, cOptions.NoSubsample, cOptions.TrellisQuantization, cOptions.OvershootDeringing, cOptions.OptimizeScans) != 0 {
+	if C.govips_jpegsave_buffer(i.cVipsImage, &obuf, &olen, cOptions.Q, cOptions.Profile, cOptions.OptimizeCoding, cOptions.Interlace, cOptions.Strip, cOptions.NoSubsample, cOptions.TrellisQuantization, cOptions.OvershootDeringing, cOptions.OptimizeScans, cOptions.QuantizationTable) != 0 {
 		return nil, ErrSave
 	}
 	defer C.g_free(C.gpointer(obuf))
@@ -814,8 +844,12 @@ func EncodePngBytes(i *VipsImage, options *EncodePngOptions) ([]byte, error) {
 }
 
 type EncodeWebpOptions struct {
-	Q        int
-	Lossless bool
+	Q              int
+	Lossless       bool
+	Preset         WebpPreset
+	SmartSubsample bool
+	NearLossless   bool
+	AlphaQ         int
 }
 
 func (o EncodeWebpOptions) toC() cEncodeWebpOptions {
@@ -824,15 +858,26 @@ func (o EncodeWebpOptions) toC() cEncodeWebpOptions {
 	} else if o.Q == INT_ZERO {
 		o.Q = 0
 	}
+	if o.AlphaQ == 0 {
+		o.AlphaQ = 100
+	}
 	return cEncodeWebpOptions{
-		Q:        C.gint(o.Q),
-		Lossless: toGBool(o.Lossless),
+		Q:              C.gint(o.Q),
+		Lossless:       toGBool(o.Lossless),
+		Preset:         o.Preset.toC(),
+		SmartSubsample: toGBool(o.SmartSubsample),
+		NearLossless:   toGBool(o.NearLossless),
+		AlphaQ:         C.gint(o.AlphaQ),
 	}
 }
 
 type cEncodeWebpOptions struct {
-	Q        C.gint
-	Lossless C.gboolean
+	Q              C.gint
+	Lossless       C.gboolean
+	Preset         C.VipsForeignWebpPreset
+	SmartSubsample C.gboolean
+	NearLossless   C.gboolean
+	AlphaQ         C.gint
 }
 
 func (c *cEncodeWebpOptions) Free() {
@@ -846,7 +891,7 @@ func EncodeWebpFile(i *VipsImage, file *os.File, options *EncodeWebpOptions) err
 	defer cOptions.Free()
 	cFileName := C.CString(file.Name())
 	defer C.free(unsafe.Pointer(cFileName))
-	if C.govips_webpsave(i.cVipsImage, cFileName, cOptions.Q, cOptions.Lossless) != 0 {
+	if C.govips_webpsave(i.cVipsImage, cFileName, cOptions.Q, cOptions.Lossless, cOptions.Preset, cOptions.SmartSubsample, cOptions.NearLossless, cOptions.AlphaQ) != 0 {
 		return ErrSave
 	}
 	return nil
@@ -860,7 +905,7 @@ func EncodeWebpBytes(i *VipsImage, options *EncodeWebpOptions) ([]byte, error) {
 	defer cOptions.Free()
 	var obuf unsafe.Pointer
 	olen := C.size_t(0)
-	if C.govips_webpsave_buffer(i.cVipsImage, &obuf, &olen, cOptions.Q, cOptions.Lossless) != 0 {
+	if C.govips_webpsave_buffer(i.cVipsImage, &obuf, &olen, cOptions.Q, cOptions.Lossless, cOptions.Preset, cOptions.SmartSubsample, cOptions.NearLossless, cOptions.AlphaQ) != 0 {
 		return nil, ErrSave
 	}
 	defer C.g_free(C.gpointer(obuf))

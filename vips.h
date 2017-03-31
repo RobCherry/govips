@@ -20,7 +20,7 @@ int govips_jpegload_buffer(void *input, size_t length, VipsImage **output, gint 
     NULL);
 }
 
-int govips_jpegsave_buffer(VipsImage *input, void **output, size_t *length, gint Q, const char *profile, gboolean optimize_coding, gboolean interlace, gboolean strip, gboolean nosubsample, gboolean trellis_quant, gboolean overshoot_deringing, gboolean optimize_scans) {
+int govips_jpegsave_buffer(VipsImage *input, void **output, size_t *length, gint Q, const char *profile, gboolean optimize_coding, gboolean interlace, gboolean strip, gboolean nosubsample, gboolean trellis_quant, gboolean overshoot_deringing, gboolean optimize_scans, gint quant_table) {
   return vips_jpegsave_buffer(input, output, length,
     "Q", Q,
     "profile", profile,
@@ -31,11 +31,11 @@ int govips_jpegsave_buffer(VipsImage *input, void **output, size_t *length, gint
     "trellis_quant", trellis_quant,
     "overshoot_deringing", overshoot_deringing,
     "optimize_scans", optimize_scans,
-    //"quant_table", quant_table, // Version 8.4.0+
+    "quant_table", quant_table,
     NULL);
 }
 
-int govips_jpegsave(VipsImage *input, const char *filename, gint Q, const char *profile, gboolean optimize_coding, gboolean interlace, gboolean strip, gboolean nosubsample, gboolean trellis_quant, gboolean overshoot_deringing, gboolean optimize_scans) {
+int govips_jpegsave(VipsImage *input, const char *filename, gint Q, const char *profile, gboolean optimize_coding, gboolean interlace, gboolean strip, gboolean nosubsample, gboolean trellis_quant, gboolean overshoot_deringing, gboolean optimize_scans, gint quant_table) {
   return vips_jpegsave(input, filename,
     "Q", Q,
     "profile", profile,
@@ -46,7 +46,7 @@ int govips_jpegsave(VipsImage *input, const char *filename, gint Q, const char *
     "trellis_quant", trellis_quant,
     "overshoot_deringing", overshoot_deringing,
     "optimize_scans", optimize_scans,
-    //"quant_table", quant_table, // Version 8.4.0+
+    "quant_table", quant_table,
     NULL);
 }
 
@@ -93,25 +93,25 @@ int govips_webpload_buffer(void *input, size_t length, VipsImage **output, gint 
     NULL);
 }
 
-int govips_webpsave_buffer(VipsImage *input, void **output, size_t *length, gint Q, gboolean lossless) {
+int govips_webpsave_buffer(VipsImage *input, void **output, size_t *length, gint Q, gboolean lossless, VipsForeignWebpPreset preset, gboolean smart_subsample, gboolean near_lossless, gint alpha_q) {
   return vips_webpsave_buffer(input, output, length,
     "Q", Q,
     "lossless", lossless,
-    //"preset", preset, // Version 8.4.0+
-    //"smart_subsample", smart_subsample, // Version 8.4.0+
-    //"near_lossless", near_lossless, // Version 8.4.0+
-    //"alpha_q", alpha_q, // Version 8.4.0+
+    "preset", preset,
+    "smart_subsample", smart_subsample,
+    "near_lossless", near_lossless,
+    "alpha_q", alpha_q,
     NULL);
 }
 
-int govips_webpsave(VipsImage *input, const char *filename, gint Q, gboolean lossless) {
+int govips_webpsave(VipsImage *input, const char *filename, gint Q, gboolean lossless, VipsForeignWebpPreset preset, gboolean smart_subsample, gboolean near_lossless, gint alpha_q) {
   return vips_webpsave(input, filename,
     "Q", Q,
     "lossless", lossless,
-    //"preset", preset, // Version 8.4.0+
-    //"smart_subsample", smart_subsample, // Version 8.4.0+
-    //"near_lossless", near_lossless, // Version 8.4.0+
-    //"alpha_q", alpha_q, // Version 8.4.0+
+    "preset", preset,
+    "smart_subsample", smart_subsample,
+    "near_lossless", near_lossless,
+    "alpha_q", alpha_q,
     NULL);
 }
 
