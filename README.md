@@ -8,7 +8,7 @@ This package is powered by the [libvips](https://github.com/jcupitt/libvips) ima
 
 ## Prerequisites
 
-* [libvips](https://github.com/jcupitt/libvips) v8.3.1+
+* [libvips](https://github.com/jcupitt/libvips) v8.5.0+
 
 ## Installation
 
