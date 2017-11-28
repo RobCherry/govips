@@ -101,6 +101,7 @@ int govips_webpsave_buffer(VipsImage *input, void **output, size_t *length, gint
     "smart_subsample", smart_subsample,
     "near_lossless", near_lossless,
     "alpha_q", alpha_q,
+    "strip", 1,
     NULL);
 }
 
@@ -112,6 +113,7 @@ int govips_webpsave(VipsImage *input, const char *filename, gint Q, gboolean los
     "smart_subsample", smart_subsample,
     "near_lossless", near_lossless,
     "alpha_q", alpha_q,
+    "strip", 1,
     NULL);
 }
 
