@@ -4,7 +4,7 @@
 [![Report Card](https://goreportcard.com/badge/github.com/RobCherry/govips)](https://goreportcard.com/report/github.com/RobCherry/govips)
 
 This package is powered by the [libvips](https://github.com/jcupitt/libvips) image processing library, originally
- created in 1989 at Birkbeck College and currently maintained by [JohnCupitt](https://github.com/jcupitt).
+ created in 1989 at Birkbeck College and currently maintained by [John Cupitt](https://github.com/jcupitt).
 
 ## Prerequisites
 
